@@ -54,13 +54,16 @@ public class SaisieController {
         model.addAttribute("aujourdHui", aujourdHui);
         return "saisie/liste";
     }
-
     @GetMapping("/{seanceId}")
-    public String formulaire(@PathVariable Long seanceId, Model model) {
+    public String formulaire(@PathVariable Long seanceId,
+                             @RequestParam(required = false) String retour,
+                             Model model) {
         Utilisateur moi = utilisateurCourant.get();
         Seance seance = presenceService.seancePourSaisie(seanceId, moi);
         model.addAttribute("seance", seance);
         model.addAttribute("presence", presenceService.pourSeance(seance).orElse(null));
+        // Page où revenir après l'enregistrement (liste de saisie ou page « Présences » du responsable)
+        model.addAttribute("retour", "presences".equals(retour) ? "presences" : "");
         return "saisie/formulaire";
     }
 
