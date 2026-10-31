@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tableau de bord')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="text-doux mb-1">Administration</p>
+                <h1 class="h2 mb-0">Tableau de bord <span th:text="${annee}">2026</span></h1>
+            </div>
+            <!-- Filtres année / unité -->
+            <form th:action="@{/admin}" method="get" class="d-flex flex-wrap gap-2">
+                <input type="hidden" name="du" th:value="${du}">
+                <input type="hidden" name="au" th:value="${au}">
+                <select name="annee" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()" aria-label="Année">
+                    <option th:each="a : ${annees}" th:value="${a}" th:text="${a}" th:selected="${a == annee}"></option>
+                </select>
+                <select name="uniteId" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()" aria-label="Unité">
+                    <option value="">Toutes les unités</option>
+                    <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}" th:selected="${u.id == uniteId}"></option>
+                </select>
+            </form>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <!-- Indicateurs de l'année -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-bleu"><i class="bi bi-calendar-check"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.seances()}">0</div><div class="kpi-libelle">Séances réalisées</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-orange"><i class="bi bi-person-badge"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.benevoles()}">0</div><div class="kpi-libelle">Présences bénévoles</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.apprenants()}">0</div><div class="kpi-libelle">Présences apprenants</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-rouge"><i class="bi bi-graph-up"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${@fmt.decimal(totauxAnnee.moyenneApprenants())}">0</div>
+                    <div class="kpi-libelle">Apprenants par séance (moyenne)</div></div>
+            </div>
+        </div>
+
+        <!-- Graphique mensuel -->
+        <div class="card mb-4">
+            <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                <span><i class="bi bi-bar-chart-line me-2 text-primary"></i>Apprenants présents par mois</span>
+                <div class="btn-group btn-group-sm ms-auto" role="group" aria-label="Indicateur">
+                    <input type="radio" class="btn-check" name="indicateur" id="ind-apprenants" value="apprenants" checked>
+                    <label class="btn btn-outline-primary" for="ind-apprenants">Apprenants</label>
+                    <input type="radio" class="btn-check" name="indicateur" id="ind-benevoles" value="benevoles">
+                    <label class="btn btn-outline-primary" for="ind-benevoles">Bénévoles</label>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="position:relative;height:320px"><canvas id="graphique-mensuel" aria-label="Graphique mensuel"></canvas></div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Tableau mensuel -->
+            <div class="col-12 col-xl-7">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="bi bi-calendar3 me-2 text-primary"></i>Par mois — <span class="ms-1" th:text="${annee}"></span>
+                        <a class="btn btn-outline-secondary btn-sm ms-auto"
+                           th:href="@{/admin/export.csv(type='mois',annee=${annee},uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                    </div>
+                    <div class="table-responsive" style="max-height:420px">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top"><tr class="small text-doux">
+                                <th>Mois</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénévoles</th>
+                                <th class="text-end">Apprenants</th><th class="text-end">Moy.</th></tr></thead>
+                            <tbody>
+                            <tr th:each="l : ${parMois}">
+                                <td th:text="${l.periode()}"></td>
+                                <td th:text="${l.unite()}"></td>
+                                <td class="text-end" th:text="${l.seances()}"></td>
+                                <td class="text-end" th:text="${l.benevoles()}"></td>
+                                <td class="text-end fw-semibold" th:text="${l.apprenants()}"></td>
+                                <td class="text-end text-doux" th:text="${@fmt.decimal(l.moyenneApprenants())}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(parMois)}"><td colspan="6" class="text-center text-doux py-4">Aucune donnée pour cette année.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau annuel -->
+            <div class="col-12 col-xl-5">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="bi bi-calendar-range me-2 text-primary"></i>Par année
+                        <a class="btn btn-outline-secondary btn-sm ms-auto"
+                           th:href="@{/admin/export.csv(type='annee',uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                    </div>
+                    <div class="table-responsive" style="max-height:420px">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top"><tr class="small text-doux">
+                                <th>Année</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénév.</th><th class="text-end">Appr.</th></tr></thead>
+                            <tbody>
+                            <tr th:each="l : ${parAnnee}">
+                                <td th:text="${l.periode()}"></td>
+                                <td th:text="${l.unite()}"></td>
+                                <td class="text-end" th:text="${l.seances()}"></td>
+                                <td class="text-end" th:text="${l.benevoles()}"></td>
+                                <td class="text-end fw-semibold" th:text="${l.apprenants()}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(parAnnee)}"><td colspan="5" class="text-center text-doux py-4">Aucune donnée.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Par date -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <form th:action="@{/admin}" method="get" class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="me-2"><i class="bi bi-list-ol me-2 text-primary"></i>Par date</span>
+                            <input type="hidden" name="annee" th:value="${annee}">
+                            <input type="hidden" name="uniteId" th:value="${uniteId}">
+                            <label class="small text-doux" for="du">du</label>
+                            <input type="date" id="du" name="du" class="form-control form-control-sm" style="width:auto" th:value="${du}">
+                            <label class="small text-doux" for="au">au</label>
+                            <input type="date" id="au" name="au" class="form-control form-control-sm" style="width:auto" th:value="${au}">
+                            <button class="btn btn-primary btn-sm" type="submit">Afficher</button>
+                            <a class="btn btn-outline-secondary btn-sm ms-auto"
+                               th:href="@{/admin/export.csv(type='jour',du=${du},au=${au},uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                        </form>
+                    </div>
+                    <div class="table-responsive" style="max-height:480px">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top"><tr class="small text-doux">
+                                <th>Date</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénévoles</th>
+                                <th class="text-end">Apprenants</th></tr></thead>
+                            <tbody>
+                            <tr th:each="l : ${parJour}">
+                                <td class="text-capitalize" th:text="${l.periode()}"></td>
+                                <td th:text="${l.unite()}"></td>
+                                <td class="text-end" th:text="${l.seances()}"></td>
+                                <td class="text-end" th:text="${l.benevoles()}"></td>
+                                <td class="text-end fw-semibold" th:text="${l.apprenants()}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(parJour)}"><td colspan="5" class="text-center text-doux py-4">Aucune présence sur cette période.</td></tr>
+                            </tbody>
+                            <tfoot th:unless="${#lists.isEmpty(parJour)}">
+                            <tr class="fw-bold">
+                                <td colspan="2">Total période</td>
+                                <td class="text-end" th:text="${totauxPeriode.seances()}"></td>
+                                <td class="text-end" th:text="${totauxPeriode.benevoles()}"></td>
+                                <td class="text-end" th:text="${totauxPeriode.apprenants()}"></td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const donnees = /*[[${graphique}]]*/ {mois: [], series: []};
+        const couleurs = ['#3459e6', '#2fb380', '#f4a100', '#da292e', '#7a4ff0', '#14a2b8', '#e85d9c', '#5c677d'];
+
+        const jeux = (indicateur) => donnees.series.map((s, i) => ({
+            label: s.unite,
+            data: s[indicateur],
+            backgroundColor: couleurs[i % couleurs.length],
+            borderRadius: 6,
+            maxBarThickness: 36
+        }));
+
+        // Couleurs des axes et légendes adaptées au mode clair / sombre.
+        const appliquerTheme = () => {
+            const sombre = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            Chart.defaults.color = sombre ? '#9aa3bb' : '#6b7590';
+            Chart.defaults.borderColor = sombre ? 'rgba(255,255,255,.08)' : 'rgba(31,42,68,.08)';
+        };
+        appliquerTheme();
+        document.addEventListener('fle-theme', () => {
+            appliquerTheme();
+            graphique.options.scales.x.ticks.color = Chart.defaults.color;
+            graphique.options.scales.y.ticks.color = Chart.defaults.color;
+            graphique.options.scales.y.grid.color = Chart.defaults.borderColor;
+            graphique.options.plugins.legend.labels.color = Chart.defaults.color;
+            graphique.update();
+        });
+
+        const graphique = new Chart(document.getElementById('graphique-mensuel'), {
+            type: 'bar',
+            data: { labels: donnees.mois, datasets: jeux('apprenants') },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+
+        document.querySelectorAll('input[name="indicateur"]').forEach(r =>
+            r.addEventListener('change', () => {
+                graphique.data.datasets = jeux(r.value);
+                graphique.update();
+            }));
+    })();
+</script>
+</body>
+</html>

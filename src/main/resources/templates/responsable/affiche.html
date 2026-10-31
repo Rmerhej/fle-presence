@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Affiche')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 d-print-none" style="max-width:210mm;margin:0 auto">
+        <a th:href="@{/responsable}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+        <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>Imprimer l'affiche</button>
+    </div>
+
+    <div class="affiche card">
+        <p class="text-primary fw-semibold mb-1"><i class="bi bi-translate me-1"></i>Français · French · Francés · الفرنسية</p>
+        <h1 class="mb-1">Cours de français</h1>
+        <h2 class="h3 text-doux mb-4" th:text="${unite.nom}">Chatou</h2>
+
+        <div class="row justify-content-center g-3 mb-4">
+            <div class="col-auto text-start">
+                <div th:each="c : ${creneaux}" class="fs-5 mb-1">
+                    <i class="bi bi-clock text-primary me-2"></i>
+                    <strong th:text="${@fmt.jour(c.jourSemaine)}">Mardi</strong>
+                    <span th:text="${@fmt.heure(c.heureDebut)} + ' – ' + ${@fmt.heure(c.heureFin)}"></span>
+                    <span class="text-doux" th:text="'(' + ${c.groupe.nom} + ')'"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="qrcode" th:attr="data-lien=${lienPublic}"></div>
+
+        <p class="fs-4 fw-bold mt-4 mb-1">
+            <i class="bi bi-phone me-2"></i>Scannez pour voir les dates des cours
+        </p>
+        <p class="text-doux mb-1">Cours annulé ou déplacé ? L'information est sur cette page.</p>
+        <p class="small text-doux" th:text="${lienPublic}">https://…/u/chatou</p>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    (function () {
+        const zone = document.getElementById('qrcode');
+        new QRCode(zone, { text: zone.dataset.lien, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    })();
+</script>
+</body>
+</html>

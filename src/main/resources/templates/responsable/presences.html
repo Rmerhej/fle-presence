@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Présences')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="text-doux mb-1" th:text="${unite.nom}">Chatou</p>
+                <h1 class="h2 mb-0">Présences — <span th:text="${@fmt.mois(mois)}">Novembre 2026</span></h1>
+            </div>
+            <div class="btn-group">
+                <a class="btn btn-light btn-sm" th:href="@{/responsable/presences(mois=${moisPrecedent})}"><i class="bi bi-chevron-left"></i></a>
+                <a class="btn btn-light btn-sm" th:href="@{/responsable/presences}">Ce mois</a>
+                <a class="btn btn-light btn-sm" th:href="@{/responsable/presences(mois=${moisSuivant})}"><i class="bi bi-chevron-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-bleu"><i class="bi bi-calendar-check"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totaux.seances()}">8</div><div class="kpi-libelle">Séances saisies</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-orange"><i class="bi bi-person-badge"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totaux.benevoles()}">16</div><div class="kpi-libelle">Présences bénévoles</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${totaux.apprenants()}">72</div><div class="kpi-libelle">Présences apprenants</div></div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card kpi"><span class="kpi-icone fond-rouge"><i class="bi bi-graph-up"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${@fmt.decimal(totaux.moyenneApprenants())}">9,0</div><div class="kpi-libelle">Apprenants / séance</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                    <tr class="small text-doux">
+                        <th>Date</th><th>Groupe</th><th class="text-center">Bénévoles</th><th class="text-center">Apprenants</th>
+                        <th class="d-none d-md-table-cell">Saisie</th><th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${presences}">
+                        <td class="fw-semibold text-nowrap" th:text="${@fmt.date(p.seance.date)}"></td>
+                        <td>
+                            <span th:text="${p.seance.groupe.nom}"></span>
+                            <div class="small text-doux" th:if="${p.commentaire}" th:text="${p.commentaire}"></div>
+                        </td>
+                        <td class="text-center fw-bold" th:text="${p.nbBenevoles}"></td>
+                        <td class="text-center fw-bold" th:text="${p.nbApprenants}"></td>
+                        <td class="small text-doux d-none d-md-table-cell">
+                            <span th:text="${p.saisiPar}"></span>
+                            <div th:if="${p.modifiePar}" class="text-warning-emphasis">
+                                modifié par <span th:text="${p.modifiePar}"></span> le <span th:text="${@fmt.dateHeure(p.modifieLe)}"></span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-outline-secondary btn-sm" th:href="@{/saisie/{id}(id=${p.seance.id},retour='presences')}"
+                               title="Modifier"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(presences)}">
+                        <td colspan="6" class="text-center text-doux py-4">Aucune présence saisie ce mois-ci.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

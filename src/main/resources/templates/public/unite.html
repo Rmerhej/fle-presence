@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${unite.nom})}"></head>
+<body class="page-publique">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Alertes en toasts : chaque cours annulé ou déplacé s'affiche à l'ouverture de la page -->
+<div class="toast-container position-fixed top-0 end-0 p-3 d-print-none">
+    <div th:each="a : ${alertes}" class="toast border-0 shadow" role="alert" aria-live="assertive"
+         data-auto="true" data-bs-autohide="false"
+         th:classappend="${a.statut.name() == 'ANNULEE'} ? 'text-bg-danger' : 'text-bg-warning'">
+        <div class="toast-header">
+            <i class="bi me-2" th:classappend="${a.statut.icone}"></i>
+            <strong class="me-auto" th:text="${a.statut.libelle}">Cours annulé</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Fermer"></button>
+        </div>
+        <div class="toast-body fs-6">
+            <strong th:text="${@fmt.date(a.date)} + ' · ' + ${@fmt.heure(a.heureDebut)}">Mardi 4 novembre · 14h00</strong>
+            <span th:text="'(' + ${a.groupe.nom} + ')'">(Débutants)</span>
+            <div th:if="${a.reporteeVers != null}">
+                <i class="bi bi-arrow-right me-1"></i>Nouveau cours :
+                <strong th:text="${@fmt.date(a.reporteeVers.date)} + ' à ' + ${@fmt.heure(a.reporteeVers.heureDebut)}"></strong>
+            </div>
+            <div th:if="${a.motif}" class="small mt-1" th:text="${a.motif}">Motif</div>
+        </div>
+    </div>
+</div>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                <div>
+                    <p class="text-doux mb-1"><i class="bi bi-translate me-1"></i>Cours de français</p>
+                    <h1 class="display-5 mb-1" th:text="${unite.nom}">Chatou</h1>
+                    <p class="text-doux mb-0" th:if="${unite.adresse}">
+                        <i class="bi bi-geo-alt-fill me-1"></i><span th:text="${unite.adresse}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 820px;">
+
+        <!-- Choix du groupe -->
+        <div class="card card-body mb-3" th:if="${#lists.size(groupes) > 1}">
+            <div class="small text-doux mb-2"><i class="bi bi-people-fill me-1"></i>Mon groupe :</div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm rounded-pill"
+                   th:classappend="${groupeChoisi == null} ? 'btn-primary' : 'btn-outline-primary'"
+                   th:href="@{/u/{slug}(slug=${unite.slug})}">Tous</a>
+                <a th:each="g : ${groupes}" class="btn btn-sm rounded-pill"
+                   th:classappend="${groupeChoisi == g.id} ? 'btn-primary' : 'btn-outline-primary'"
+                   th:href="@{/u/{slug}(slug=${unite.slug},groupe=${g.id})}"
+                   th:text="${g.nom} + (${g.niveau} != null ? ' · ' + ${g.niveau} : '')">Débutants</a>
+            </div>
+        </div>
+
+        <!-- Bandeau des alertes (reste visible après fermeture des toasts) -->
+        <div th:unless="${#lists.isEmpty(alertes)}" class="mt-4">
+            <h2 class="h5"><i class="bi bi-bell-fill text-warning me-2"></i>Attention, changements</h2>
+            <div th:each="a : ${alertes}" class="alerte-publique" th:classappend="${a.statut.name()}">
+                <i class="bi" th:classappend="${a.statut.icone} + ' text-' + ${a.statut.couleur}"></i>
+                <div>
+                    <div class="fw-bold" th:text="${a.statut.libelle}">Cours annulé</div>
+                    <div>
+                        <span th:text="${@fmt.date(a.date)} + ' · ' + ${@fmt.heure(a.heureDebut)}"></span>
+                        <span class="text-doux" th:text="' — ' + ${a.groupe.nom}"></span>
+                    </div>
+                    <div th:if="${a.reporteeVers != null}" class="fw-semibold">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Nouveau cours :
+                        <span th:text="${@fmt.date(a.reporteeVers.date)} + ' à ' + ${@fmt.heure(a.reporteeVers.heureDebut)}"></span>
+                    </div>
+                    <div class="small text-doux" th:if="${a.motif}" th:text="${a.motif}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Planning -->
+        <h2 class="h5 mt-4 mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Prochains cours</h2>
+
+        <div th:if="${#maps.isEmpty(parJour)}" class="card card-body text-center text-doux mt-3">
+            <i class="bi bi-calendar-x fs-1 mb-2"></i>
+            Pas de cours prévu pour le moment.
+        </div>
+
+        <th:block th:each="jour : ${parJour}">
+            <div class="jour-titre">
+                <span th:text="${@fmt.date(jour.key)}">Mardi 4 novembre</span>
+                <span class="badge bg-primary rounded-pill fs-6" th:if="${jour.key == aujourdHui}">Aujourd'hui</span>
+            </div>
+            <div th:each="s : ${jour.value}" class="seance" th:classappend="'statut-' + ${s.statut.name()}">
+                <div class="seance-heure" th:text="${@fmt.heure(s.heureDebut)}">14h00</div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">
+                        <span th:text="${s.groupe.nom}">Débutants</span>
+                        <span class="badge bg-info-subtle text-info-emphasis ms-1"
+                              th:if="${s.statut.name() == 'PREVUE' and s.modifieeLe != null and s.modifieeLe.isAfter(recemment)}">Nouveau</span>
+                    </div>
+                    <div class="small text-doux">
+                        <i class="bi bi-clock me-1"></i><span th:text="${@fmt.heure(s.heureDebut)} + ' – ' + ${@fmt.heure(s.heureFin)}"></span>
+                        <th:block th:if="${s.salle}"> · <i class="bi bi-door-open me-1"></i><span th:text="${s.salle}"></span></th:block>
+                    </div>
+                    <div class="small fw-semibold text-danger" th:if="${s.statut.name() == 'ANNULEE'}">
+                        Pas de cours<span th:if="${s.motif}" th:text="' : ' + ${s.motif}"></span>
+                    </div>
+                    <div class="small fw-semibold text-warning-emphasis" th:if="${s.reporteeVers != null}">
+                        Déplacé au <span th:text="${@fmt.date(s.reporteeVers.date)} + ' à ' + ${@fmt.heure(s.reporteeVers.heureDebut)}"></span>
+                    </div>
+                </div>
+                <i class="bi seance-icone" th:classappend="${s.statut.icone} + ' text-' + ${s.statut.couleur}"
+                   th:title="${s.statut.libelle}"></i>
+            </div>
+        </th:block>
+
+        <!-- Légende avec pictogrammes, pour tous les niveaux de lecture -->
+        <div class="card card-body mt-4 legende small d-flex flex-row flex-wrap gap-3 justify-content-center">
+            <span><i class="bi bi-check-circle-fill text-success me-1"></i>Cours maintenu</span>
+            <span><i class="bi bi-x-circle-fill text-danger me-1"></i>Cours annulé</span>
+            <span><i class="bi bi-arrow-right-circle-fill text-warning me-1"></i>Cours déplacé</span>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

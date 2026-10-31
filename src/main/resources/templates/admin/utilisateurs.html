@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Comptes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <p class="text-doux mb-1">Administration</p>
+            <h1 class="h2 mb-0">Comptes</h1>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-xl-8">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr class="small text-doux"><th>Nom</th><th>Rôle</th><th>Unité</th><th>État</th><th class="text-end">Actions</th></tr></thead>
+                            <tbody>
+                            <tr th:each="u : ${utilisateurs}">
+                                <td>
+                                    <div class="fw-semibold" th:text="${u.nomAffiche}">Marie</div>
+                                    <div class="small text-doux" th:text="${u.username}">resp.chatou</div>
+                                </td>
+                                <td><span class="badge"
+                                          th:classappend="${u.role.name() == 'ADMIN'} ? 'text-bg-dark' : (${u.role.name() == 'RESPONSABLE'} ? 'text-bg-primary' : 'bg-primary-subtle text-primary-emphasis')"
+                                          th:text="${u.role.libelle}"></span></td>
+                                <td th:text="${u.unite != null ? u.unite.nom : '—'}"></td>
+                                <td><span class="badge" th:classappend="${u.actif} ? 'text-bg-success' : 'text-bg-secondary'"
+                                          th:text="${u.actif} ? 'Actif' : 'Désactivé'"></span></td>
+                                <td class="text-end text-nowrap">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                                            th:attr="data-bs-target='#mdp-' + ${u.id}" title="Changer le mot de passe"><i class="bi bi-key"></i></button>
+                                    <form class="d-inline" th:action="@{/admin/utilisateurs/{id}/basculer(id=${u.id})}" method="post"
+                                          th:unless="${moi != null and moi.id == u.id}">
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit"
+                                                th:text="${u.actif} ? 'Désactiver' : 'Réactiver'"></button>
+                                    </form>
+                                    <div class="collapse mt-2" th:id="'mdp-' + ${u.id}">
+                                        <form class="d-flex gap-1" th:action="@{/admin/utilisateurs/{id}/motdepasse(id=${u.id})}" method="post">
+                                            <input class="form-control form-control-sm" type="text" name="motDePasse" minlength="8"
+                                                   placeholder="Nouveau mot de passe" required autocomplete="off">
+                                            <button class="btn btn-primary btn-sm" type="submit">OK</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-person-plus me-1"></i>Nouveau compte</div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/utilisateurs}" method="post">
+                            <label class="form-label small">Rôle</label>
+                            <select name="role" class="form-select mb-2" required>
+                                <option th:each="r : ${roles}" th:value="${r}" th:text="${r.libelle}"
+                                        th:selected="${r.name() == 'RESPONSABLE'}"></option>
+                            </select>
+                            <label class="form-label small">Unité locale <span class="text-doux">(sauf administrateur)</span></label>
+                            <select name="uniteId" class="form-select mb-2">
+                                <option value="">—</option>
+                                <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}"></option>
+                            </select>
+                            <input class="form-control mb-2" name="nomAffiche" placeholder="Nom affiché (ex. Marie)" required maxlength="100">
+                            <input class="form-control mb-2" name="username" placeholder="Identifiant (ex. resp.chatou)" required
+                                   pattern="[a-z0-9._\-]{3,50}" autocapitalize="none">
+                            <input class="form-control mb-3" type="text" name="motDePasse" placeholder="Mot de passe provisoire (8 car. min.)"
+                                   required minlength="8" autocomplete="off">
+                            <button class="btn btn-primary btn-sm w-100" type="submit">Créer le compte</button>
+                            <div class="form-text">Un seul responsable actif par unité locale.</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

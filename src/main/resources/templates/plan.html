@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Plan du site')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <h1 class="h2 mb-0">Plan du site</h1>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 820px;">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <div class="card-header"><i class="bi bi-calendar3 me-2 text-primary"></i>Dates des cours (apprenants)</div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a th:href="@{/}">Accueil — choisir sa ville</a></li>
+                        <li class="list-group-item" th:each="u : ${unites}">
+                            <a th:href="@{/u/{slug}(slug=${u.slug})}" th:text="'Cours à ' + ${u.nom}">Cours à Chatou</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <div class="card-header"><i class="bi bi-person-badge me-2 text-primary"></i>Bénévoles et responsables</div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a th:href="@{/login}">Connexion</a></li>
+                        <li class="list-group-item"><a th:href="@{/saisie}">Saisie des présences</a> <span class="small text-doux">(connexion requise)</span></li>
+                        <li class="list-group-item"><a th:href="@{/responsable}">Espace responsable</a> <span class="small text-doux">(connexion requise)</span></li>
+                        <li class="list-group-item"><a th:href="@{/compte}">Mon mot de passe</a> <span class="small text-doux">(connexion requise)</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-info-circle me-2 text-primary"></i>Informations</div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a th:href="@{/confidentialite}">Confidentialité et données personnelles</a></li>
+                        <li class="list-group-item"><a th:href="@{/plan-du-site}">Plan du site</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

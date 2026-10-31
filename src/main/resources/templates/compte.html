@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mon mot de passe')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-key me-2"></i>Changer mon mot de passe</div>
+                <div class="card-body">
+                    <form th:action="@{/compte}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="actuel">Mot de passe actuel</label>
+                            <input class="form-control" type="password" id="actuel" name="actuel" autocomplete="current-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="nouveau">Nouveau mot de passe <span class="text-doux small">(8 caractères minimum)</span></label>
+                            <input class="form-control" type="password" id="nouveau" name="nouveau" minlength="8" autocomplete="new-password" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="confirmation">Confirmer le nouveau mot de passe</label>
+                            <input class="form-control" type="password" id="confirmation" name="confirmation" minlength="8" autocomplete="new-password" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

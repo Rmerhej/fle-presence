@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mon unité')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="text-doux mb-1">Espace responsable</p>
+                <h1 class="h2 mb-0" th:text="${unite.nom}">Chatou</h1>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-light btn-sm" th:href="${lienPublic}" target="_blank" rel="noopener">
+                    <i class="bi bi-eye me-1"></i>Page des apprenants</a>
+                <button class="btn btn-light btn-sm" type="button" th:attr="data-copier=${lienPublic}">
+                    <i class="bi bi-link-45deg me-1"></i>Copier le lien</button>
+                <a class="btn btn-light btn-sm" th:href="@{/responsable/affiche}"><i class="bi bi-qr-code me-1"></i>Affiche QR code</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <!-- Rappel : séances passées sans saisie -->
+        <div class="card border-warning mb-4" th:unless="${#lists.isEmpty(nonSaisies)}">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <span class="kpi-icone fond-orange rounded-3 d-inline-grid" style="width:2.75rem;height:2.75rem;place-items:center">
+                    <i class="bi bi-exclamation-lg"></i></span>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold"><span th:text="${#lists.size(nonSaisies)}">3</span> séance(s) passée(s) sans présences saisies</div>
+                    <div class="small text-doux">
+                        <th:block th:each="s, it : ${nonSaisies}" th:if="${it.index < 4}">
+                            <a th:href="@{/saisie/{id}(id=${s.id})}" th:text="${@fmt.dateCourte(s.date)} + ' (' + ${s.groupe.nom} + ')'"></a><span th:unless="${it.last or it.index == 3}">, </span>
+                        </th:block>
+                        <span th:if="${#lists.size(nonSaisies) > 4}">…</span>
+                    </div>
+                </div>
+                <a class="btn btn-warning btn-sm" th:href="@{/saisie}">Saisir</a>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" th:classappend="${onglet == 'planning'} ? 'active'" data-bs-toggle="tab"
+                        data-bs-target="#planning" type="button" role="tab"><i class="bi bi-calendar-week me-1"></i>Planning</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" th:classappend="${onglet == 'groupes'} ? 'active'" data-bs-toggle="tab"
+                        data-bs-target="#groupes" type="button" role="tab"><i class="bi bi-diagram-3 me-1"></i>Groupes &amp; horaires</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" th:classappend="${onglet == 'benevoles'} ? 'active'" data-bs-toggle="tab"
+                        data-bs-target="#benevoles" type="button" role="tab"><i class="bi bi-person-badge me-1"></i>Bénévoles</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- ======================================================= PLANNING -->
+            <div class="tab-pane fade" th:classappend="${onglet == 'planning'} ? 'show active'" id="planning" role="tabpanel">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <form th:action="@{/responsable/seances/generer}" method="post" class="d-flex gap-2">
+                        <select name="semaines" class="form-select form-select-sm" style="width:auto" aria-label="Nombre de semaines">
+                            <option value="4">4 semaines</option>
+                            <option value="8" selected>8 semaines</option>
+                            <option value="12">12 semaines</option>
+                            <option value="26">6 mois</option>
+                        </select>
+                        <button class="btn btn-outline-primary btn-sm text-nowrap" type="submit">
+                            <i class="bi bi-arrow-repeat me-1"></i>Compléter le planning</button>
+                    </form>
+                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#form-ponctuelle">
+                        <i class="bi bi-plus-lg me-1"></i>Séance exceptionnelle</button>
+                </div>
+
+                <div class="collapse mb-3" id="form-ponctuelle">
+                    <div class="card card-body">
+                        <form th:action="@{/responsable/seances}" method="post" class="row g-2 align-items-end">
+                            <div class="col-12 col-md-3">
+                                <label class="form-label small">Groupe</label>
+                                <select name="groupeId" class="form-select" required>
+                                    <option th:each="g : ${groupes}" th:value="${g.id}" th:text="${g.nom}"></option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label small">Date</label>
+                                <input type="date" name="date" class="form-control" required th:min="${aujourdHui}">
+                            </div>
+                            <div class="col-3 col-md-2">
+                                <label class="form-label small">Début</label>
+                                <input type="time" name="debut" class="form-control" required>
+                            </div>
+                            <div class="col-3 col-md-2">
+                                <label class="form-label small">Fin</label>
+                                <input type="time" name="fin" class="form-control" required>
+                            </div>
+                            <div class="col-8 col-md-2">
+                                <label class="form-label small">Salle</label>
+                                <input type="text" name="salle" class="form-control" maxlength="100">
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary btn-sm" type="submit">Ajouter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Séances des 6 prochaines semaines</div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr class="small text-doux">
+                                <th>Date</th><th>Horaire</th><th>Groupe</th><th>Statut</th><th class="text-end">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="s : ${aVenir}">
+                                <td class="fw-semibold text-nowrap" th:text="${@fmt.date(s.date)}">Mardi 4 novembre</td>
+                                <td class="text-nowrap" th:text="${@fmt.heure(s.heureDebut)} + ' – ' + ${@fmt.heure(s.heureFin)}"></td>
+                                <td th:text="${s.groupe.nom}">Débutants</td>
+                                <td>
+                                    <span class="badge rounded-pill" th:classappend="'text-bg-' + ${s.statut.couleur}">
+                                        <i class="bi me-1" th:classappend="${s.statut.icone}"></i><span th:text="${s.statut.libelle}"></span>
+                                    </span>
+                                    <div class="small text-doux" th:if="${s.reporteeVers != null}"
+                                         th:text="'→ ' + ${@fmt.date(s.reporteeVers.date)} + ' ' + ${@fmt.heure(s.reporteeVers.heureDebut)}"></div>
+                                    <div class="small text-doux" th:if="${s.motif}" th:text="${s.motif}"></div>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <th:block th:if="${s.statut.name() == 'PREVUE'}">
+                                        <button type="button" class="btn btn-outline-warning btn-sm" title="Déplacer"
+                                                data-bs-toggle="modal" data-bs-target="#modal-reporter"
+                                                th:attr="data-action=@{/responsable/seances/{id}/reporter(id=${s.id})},
+                                                         data-libelle=${@fmt.date(s.date)} + ' · ' + ${s.groupe.nom},
+                                                         data-date=${s.date.plusDays(7)},
+                                                         data-debut=${#temporals.format(s.heureDebut, 'HH:mm')},
+                                                         data-fin=${#temporals.format(s.heureFin, 'HH:mm')}">
+                                            <i class="bi bi-arrow-right-circle"></i><span class="d-none d-lg-inline ms-1">Déplacer</span>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" title="Annuler"
+                                                data-bs-toggle="modal" data-bs-target="#modal-annuler"
+                                                th:attr="data-action=@{/responsable/seances/{id}/annuler(id=${s.id})},
+                                                         data-libelle=${@fmt.date(s.date)} + ' · ' + ${s.groupe.nom}">
+                                            <i class="bi bi-x-circle"></i><span class="d-none d-lg-inline ms-1">Annuler</span>
+                                        </button>
+                                    </th:block>
+                                    <form th:if="${s.statut.name() == 'ANNULEE'}" th:action="@{/responsable/seances/{id}/retablir(id=${s.id})}"
+                                          method="post" class="d-inline">
+                                        <button class="btn btn-outline-success btn-sm" type="submit"><i class="bi bi-arrow-counterclockwise me-1"></i>Rétablir</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(aVenir)}">
+                                <td colspan="5" class="text-center text-doux py-4">
+                                    Aucune séance prévue. Créez d'abord un groupe et ses horaires dans l'onglet « Groupes &amp; horaires ».
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================================================= GROUPES & CRÉNEAUX -->
+            <div class="tab-pane fade" th:classappend="${onglet == 'groupes'} ? 'show active'" id="groupes" role="tabpanel">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="card mb-3" th:each="g : ${groupes}">
+                            <div class="card-header d-flex align-items-center">
+                                <span th:text="${g.nom}">Débutants</span>
+                                <span class="badge bg-primary-subtle text-primary-emphasis ms-2" th:if="${g.niveau}" th:text="${g.niveau}">A1</span>
+                                <form class="ms-auto" th:action="@{/responsable/groupes/{id}/supprimer(id=${g.id})}" method="post"
+                                      data-confirm="Retirer ce groupe ? Il n'apparaîtra plus dans le planning.">
+                                    <button class="btn btn-link btn-sm text-danger p-0" type="submit"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-center" th:each="c : ${creneaux}" th:if="${c.groupe.id == g.id}">
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    <span class="fw-semibold me-2" th:text="${@fmt.jour(c.jourSemaine)}">Mardi</span>
+                                    <span th:text="${@fmt.heure(c.heureDebut)} + ' – ' + ${@fmt.heure(c.heureFin)}"></span>
+                                    <span class="text-doux small ms-2" th:if="${c.salle}" th:text="'· ' + ${c.salle}"></span>
+                                    <form class="ms-auto" th:action="@{/responsable/creneaux/{id}/supprimer(id=${c.id})}" method="post"
+                                          data-confirm="Supprimer cet horaire ? Les séances futures correspondantes seront retirées du planning.">
+                                        <button class="btn btn-link btn-sm text-danger p-0" type="submit"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card card-body text-center text-doux" th:if="${#lists.isEmpty(groupes)}">
+                            Pas encore de groupe : créez-en un à droite.
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="card mb-3">
+                            <div class="card-header"><i class="bi bi-plus-circle me-1"></i>Nouveau groupe</div>
+                            <div class="card-body">
+                                <form th:action="@{/responsable/groupes}" method="post">
+                                    <input class="form-control mb-2" name="nom" placeholder="Nom (ex. Débutants)" required maxlength="100">
+                                    <input class="form-control mb-2" name="niveau" placeholder="Niveau (ex. A1) — facultatif" maxlength="50">
+                                    <button class="btn btn-primary btn-sm w-100" type="submit">Créer le groupe</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card" th:unless="${#lists.isEmpty(groupes)}">
+                            <div class="card-header"><i class="bi bi-calendar-plus me-1"></i>Nouvel horaire hebdomadaire</div>
+                            <div class="card-body">
+                                <form th:action="@{/responsable/creneaux}" method="post">
+                                    <select name="groupeId" class="form-select mb-2" required>
+                                        <option th:each="g : ${groupes}" th:value="${g.id}" th:text="${g.nom}"></option>
+                                    </select>
+                                    <select name="jour" class="form-select mb-2" required>
+                                        <option th:each="j : ${jours}" th:value="${j}" th:text="${@fmt.jour(j)}"></option>
+                                    </select>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col"><input type="time" name="debut" class="form-control" required aria-label="Début"></div>
+                                        <div class="col"><input type="time" name="fin" class="form-control" required aria-label="Fin"></div>
+                                    </div>
+                                    <input class="form-control mb-2" name="salle" placeholder="Salle — facultatif" maxlength="100">
+                                    <button class="btn btn-primary btn-sm w-100" type="submit">Ajouter l'horaire</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================================================= BÉNÉVOLES -->
+            <div class="tab-pane fade" th:classappend="${onglet == 'benevoles'} ? 'show active'" id="benevoles" role="tabpanel">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-8">
+                        <div class="card">
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead><tr class="small text-doux"><th>Nom</th><th>Identifiant</th><th>État</th><th></th></tr></thead>
+                                    <tbody>
+                                    <tr th:each="b : ${benevoles}">
+                                        <td class="fw-semibold" th:text="${b.nomAffiche}">Paul</td>
+                                        <td class="text-doux" th:text="${b.username}">benevole</td>
+                                        <td><span class="badge" th:classappend="${b.actif} ? 'text-bg-success' : 'text-bg-secondary'"
+                                                  th:text="${b.actif} ? 'Actif' : 'Désactivé'"></span></td>
+                                        <td class="text-end">
+                                            <form th:action="@{/responsable/benevoles/{id}/basculer(id=${b.id})}" method="post">
+                                                <button class="btn btn-outline-secondary btn-sm" type="submit"
+                                                        th:text="${b.actif} ? 'Désactiver' : 'Réactiver'"></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(benevoles)}"><td colspan="4" class="text-center text-doux py-4">Aucun compte bénévole.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-person-plus me-1"></i>Nouveau compte bénévole</div>
+                            <div class="card-body">
+                                <form th:action="@{/responsable/benevoles}" method="post">
+                                    <input class="form-control mb-2" name="nomAffiche" placeholder="Prénom" required maxlength="100">
+                                    <input class="form-control mb-2" name="username" placeholder="Identifiant (ex. paul.chatou)" required
+                                           pattern="[a-z0-9._\-]{3,50}" autocapitalize="none">
+                                    <input class="form-control mb-2" type="text" name="motDePasse" placeholder="Mot de passe provisoire (8 car. min.)"
+                                           required minlength="8" autocomplete="off">
+                                    <button class="btn btn-primary btn-sm w-100" type="submit">Créer le compte</button>
+                                    <div class="form-text">Le bénévole pourra changer son mot de passe dans « Mon mot de passe ».</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Fenêtre : annuler une séance -->
+<div class="modal fade" id="modal-annuler" tabindex="-1" aria-hidden="true" data-seance-modal>
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="#">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="modal-header">
+                <h2 class="modal-title h5"><i class="bi bi-x-circle text-danger me-2"></i>Annuler la séance</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold" data-libelle-seance></p>
+                <label class="form-label small" for="motif-annuler">Motif affiché aux apprenants (phrase simple)</label>
+                <input class="form-control" id="motif-annuler" name="motif" maxlength="255" placeholder="ex. Vacances scolaires">
+                <div class="form-text"><i class="bi bi-bell me-1"></i>Une alerte apparaîtra sur la page des apprenants.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Retour</button>
+                <button type="submit" class="btn btn-danger">Annuler la séance</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Fenêtre : déplacer une séance -->
+<div class="modal fade" id="modal-reporter" tabindex="-1" aria-hidden="true" data-seance-modal>
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="#">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="modal-header">
+                <h2 class="modal-title h5"><i class="bi bi-arrow-right-circle text-warning me-2"></i>Déplacer la séance</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold" data-libelle-seance></p>
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small" for="date-reporter">Nouvelle date</label>
+                        <input class="form-control" id="date-reporter" type="date" name="date" required>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <label class="form-label small" for="debut-reporter">Début</label>
+                        <input class="form-control" id="debut-reporter" type="time" name="debut" required>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <label class="form-label small" for="fin-reporter">Fin</label>
+                        <input class="form-control" id="fin-reporter" type="time" name="fin" required>
+                    </div>
+                </div>
+                <label class="form-label small" for="motif-reporter">Motif (facultatif)</label>
+                <input class="form-control" id="motif-reporter" name="motif" maxlength="255" placeholder="ex. Salle indisponible">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Retour</button>
+                <button type="submit" class="btn btn-warning">Déplacer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

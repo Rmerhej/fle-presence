@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Unités locales')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <p class="text-doux mb-1">Administration</p>
+            <h1 class="h2 mb-0">Unités locales</h1>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr class="small text-doux"><th>Unité</th><th>Page publique</th><th>État</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="u : ${unites}">
+                                <td>
+                                    <div class="fw-semibold" th:text="${u.nom}">Chatou</div>
+                                    <div class="small text-doux" th:text="${u.adresse}"></div>
+                                </td>
+                                <td><a th:href="@{/u/{slug}(slug=${u.slug})}" target="_blank" rel="noopener"
+                                       th:text="'/u/' + ${u.slug}">/u/chatou</a></td>
+                                <td><span class="badge" th:classappend="${u.active} ? 'text-bg-success' : 'text-bg-secondary'"
+                                          th:text="${u.active} ? 'Active' : 'Désactivée'"></span></td>
+                                <td class="text-end">
+                                    <form th:action="@{/admin/unites/{id}/basculer(id=${u.id})}" method="post"
+                                          th:attr="data-confirm=${u.active} ? 'Désactiver cette unité ? Sa page publique ne sera plus visible.' : 'Réactiver cette unité ?'">
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit"
+                                                th:text="${u.active} ? 'Désactiver' : 'Réactiver'"></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-plus-circle me-1"></i>Nouvelle unité locale</div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/unites}" method="post">
+                            <input class="form-control mb-2" name="nom" placeholder="Ville (ex. Le Vésinet)" required maxlength="100">
+                            <input class="form-control mb-2" name="adresse" placeholder="Adresse des cours — facultatif" maxlength="255">
+                            <button class="btn btn-primary btn-sm w-100" type="submit">Créer l'unité</button>
+                            <div class="form-text">Ensuite, créez le compte du responsable dans « Comptes ».</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

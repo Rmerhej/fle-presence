@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Erreur')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container py-5 text-center">
+    <div class="display-1 text-primary mb-3"><i class="bi" th:classappend="${status == 404} ? 'bi-signpost-split' : (${status == 403} ? 'bi-lock' : 'bi-cone-striped')"></i></div>
+    <h1 class="h3" th:text="${status == 404} ? 'Page introuvable' : (${status == 403} ? 'Accès réservé' : 'Une erreur est survenue')">Erreur</h1>
+    <p class="text-doux" th:text="${status == 403} ? 'Vous n’avez pas les droits pour cette page.' : 'Revenez à l’accueil et réessayez.'"></p>
+    <a class="btn btn-primary mt-2" th:href="@{/}"><i class="bi bi-house me-1"></i>Accueil</a>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

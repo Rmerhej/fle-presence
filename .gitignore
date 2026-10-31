@@ -1,0 +1,15 @@
+# Build
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Secrets : ne jamais publier
+.env
+
+# Système
+.DS_Store
+Thumbs.db
+*.log

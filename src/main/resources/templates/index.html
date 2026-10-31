@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Accueil')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <h1 class="display-6 mb-2">Cours de français</h1>
+            <p class="lead text-doux mb-0">Choisissez votre ville pour voir les dates des cours.</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-4" th:each="u : ${unites}">
+                <a class="card h-100 text-decoration-none text-reset" th:href="@{/u/{slug}(slug=${u.slug})}">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <span class="kpi-icone fond-bleu rounded-3 d-inline-grid" style="width:3rem;height:3rem;place-items:center;font-size:1.4rem">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </span>
+                        <div>
+                            <div class="h5 mb-0" th:text="${u.nom}">Chatou</div>
+                            <div class="small text-doux" th:text="${u.adresse}">Adresse</div>
+                        </div>
+                        <i class="bi bi-chevron-right ms-auto text-doux"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12" th:if="${#lists.isEmpty(unites)}">
+                <div class="card card-body text-center text-doux">Aucune unité locale pour le moment.</div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5" th:if="${param.deconnecte}">
+            <p class="text-doux"><i class="bi bi-check-circle me-1"></i>Vous êtes déconnecté.</p>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

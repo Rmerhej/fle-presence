@@ -1,0 +1,67 @@
+# FLE Présence : application + MySQL 8 + phpMyAdmin
+#   1. cp .env.example .env   (puis choisir les mots de passe)
+#   2. docker compose up -d --build
+#   Application : http://localhost:8080      phpMyAdmin : http://localhost:8081
+name: fle-presence
+
+services:
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: fle_presence
+      MYSQL_USER: ${DB_USER:-fle}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Définir DB_PASSWORD dans .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Définir DB_ROOT_PASSWORD dans .env}
+      TZ: Europe/Paris
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - db-data:/var/lib/mysql
+    # La base n'est pas exposée sur la machine : seuls l'app et phpMyAdmin y accèdent.
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app:
+    build: .
+    image: ${APP_IMAGE:-rolandmerhej1/fle-presence:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://db:3306/fle_presence?serverTimezone=Europe/Paris&characterEncoding=UTF-8
+      DB_USER: ${DB_USER:-fle}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:-admin}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:?Définir APP_ADMIN_PASSWORD dans .env}
+      APP_LIEN_FRENCH_FOR_BEGINNERS: ${APP_LIEN_FRENCH_FOR_BEGINNERS:-}
+      APP_LIEN_BENEVOLAT: ${APP_LIEN_BENEVOLAT:-}
+      APP_LIEN_FACEBOOK: ${APP_LIEN_FACEBOOK:-}
+      APP_LIEN_INSTAGRAM: ${APP_LIEN_INSTAGRAM:-}
+      APP_LIEN_LINKEDIN: ${APP_LIEN_LINKEDIN:-}
+      APP_LIEN_YOUTUBE: ${APP_LIEN_YOUTUBE:-}
+      APP_LIEN_X: ${APP_LIEN_X:-}
+      TZ: Europe/Paris
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      # Accessible uniquement depuis cet ordinateur
+      - "127.0.0.1:${PMA_PORT:-8081}:80"
+
+volumes:
+  db-data:

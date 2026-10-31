@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Saisir les présences')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main class="container py-4" style="max-width: 560px;">
+    <a th:href="${param.retour != null and param.retour[0] == 'presences'} ? @{/responsable/presences} : @{/saisie}"
+       class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+
+    <div class="card mt-3">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <div class="small text-doux" th:text="${seance.groupe.unite.nom} + ' · ' + ${seance.groupe.nom}">Chatou · Débutants</div>
+                <h1 class="h3 mb-1" th:text="${@fmt.date(seance.date)}">Mardi 4 novembre</h1>
+                <div class="text-doux" th:text="${@fmt.heure(seance.heureDebut)} + ' – ' + ${@fmt.heure(seance.heureFin)}">14h00 – 16h00</div>
+            </div>
+
+            <div class="alert alert-warning small" th:if="${presence != null}">
+                <i class="bi bi-pencil me-1"></i>Modification d'une saisie existante
+                (saisie par <strong th:text="${presence.saisiPar}"></strong>
+                le <span th:text="${@fmt.dateHeure(presence.saisiLe)}"></span>).
+            </div>
+
+            <form th:action="@{/saisie/{id}(id=${seance.id})}" method="post">
+                <input type="hidden" name="retour" th:value="${param.retour != null ? param.retour[0] : ''}">
+
+                <div class="text-center mb-4">
+                    <label class="form-label fw-semibold d-block" for="nbBenevoles">
+                        <i class="bi bi-person-badge me-1 text-primary"></i>Bénévoles présents
+                    </label>
+                    <div class="compteur">
+                        <button type="button" class="btn btn-outline-primary" data-compteur="nbBenevoles" data-pas="-1" aria-label="Moins">−</button>
+                        <input type="number" class="form-control" id="nbBenevoles" name="nbBenevoles" min="0" max="500"
+                               inputmode="numeric" required th:value="${presence != null ? presence.nbBenevoles : 1}">
+                        <button type="button" class="btn btn-outline-primary" data-compteur="nbBenevoles" data-pas="1" aria-label="Plus">+</button>
+                    </div>
+                </div>
+
+                <div class="text-center mb-4">
+                    <label class="form-label fw-semibold d-block" for="nbApprenants">
+                        <i class="bi bi-people-fill me-1 text-success"></i>Apprenants présents
+                    </label>
+                    <div class="compteur">
+                        <button type="button" class="btn btn-outline-success" data-compteur="nbApprenants" data-pas="-1" aria-label="Moins">−</button>
+                        <input type="number" class="form-control" id="nbApprenants" name="nbApprenants" min="0" max="500"
+                               inputmode="numeric" required th:value="${presence != null ? presence.nbApprenants : 0}">
+                        <button type="button" class="btn btn-outline-success" data-compteur="nbApprenants" data-pas="1" aria-label="Plus">+</button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small text-doux" for="commentaire">Commentaire (facultatif, sans nom d'apprenant)</label>
+                    <textarea class="form-control" id="commentaire" name="commentaire" rows="2" maxlength="500"
+                              th:text="${presence != null ? presence.commentaire : ''}"></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-lg w-100" type="submit">
+                    <i class="bi bi-check2-circle me-1"></i>Enregistrer
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

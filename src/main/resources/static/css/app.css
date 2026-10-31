@@ -1,0 +1,291 @@
+/* ==========================================================================
+   FLE Présence — compléments au thème Bootswatch Zephyr
+   Thème clair / sombre : attribut data-bs-theme sur <html> (Bootstrap 5.3)
+   ========================================================================== */
+
+:root,
+[data-bs-theme="light"] {
+    --fle-fond: #f5f7fb;
+    --fle-surface: #ffffff;
+    --fle-encre: #1f2a44;
+    --fle-doux: #6b7590;
+    --fle-bord: rgba(31, 42, 68, .08);
+    --fle-ombre: 0 1px 2px rgba(31, 42, 68, .04), 0 4px 16px rgba(31, 42, 68, .05);
+    --fle-bleu: #3459e6;
+    --fle-bleu-clair: #e8eefe;
+    --fle-vert: #1f9d55;
+    --fle-vert-clair: #e6f6ee;
+    --fle-rouge: #d63345;
+    --fle-rouge-clair: #fdecee;
+    --fle-orange: #c77700;
+    --fle-orange-clair: #fff4e0;
+    --fle-entete: linear-gradient(135deg, #3459e6 0%, #5b7cf0 55%, #7f9cf5 100%);
+    --fle-annulee: #fffafa;
+    --fle-reportee: #fffdf7;
+    --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+[data-bs-theme="dark"] {
+    --fle-fond: #0f1420;
+    --fle-surface: #171d2b;
+    --fle-encre: #e6e9f2;
+    --fle-doux: #9aa3bb;
+    --fle-bord: rgba(255, 255, 255, .08);
+    --fle-ombre: 0 1px 2px rgba(0, 0, 0, .4);
+    --fle-bleu: #7f9cf5;
+    --fle-bleu-clair: rgba(127, 156, 245, .15);
+    --fle-vert: #4cc38a;
+    --fle-vert-clair: rgba(76, 195, 138, .15);
+    --fle-rouge: #f07580;
+    --fle-rouge-clair: rgba(240, 117, 128, .15);
+    --fle-orange: #f5b544;
+    --fle-orange-clair: rgba(245, 181, 68, .15);
+    --fle-entete: linear-gradient(135deg, #1d2c66 0%, #2a3f8f 60%, #3459e6 100%);
+    --fle-annulee: rgba(240, 117, 128, .06);
+    --fle-reportee: rgba(245, 181, 68, .06);
+    --bs-body-bg: #0f1420;
+    --bs-body-color: #e6e9f2;
+    --bs-secondary-bg: #171d2b;
+    --bs-tertiary-bg: #1b2232;
+    --bs-border-color: rgba(255, 255, 255, .12);
+    --bs-emphasis-color: #fff;
+    color-scheme: dark;
+}
+
+body {
+    background: var(--fle-fond);
+    color: var(--fle-encre);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main { flex: 1; }
+
+h1, h2, h3, h4, .navbar-brand, .titre-display {
+    font-family: "Nunito", "Inter", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.logo-pastille {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .6rem;
+    background: #3459e6;
+    color: #fff;
+    font-size: 1rem;
+}
+
+/* --------------------------------------------------------------- surfaces */
+.surface,
+.navbar.surface,
+footer.surface {
+    background: var(--fle-surface) !important;
+    border-color: var(--fle-bord) !important;
+}
+
+.card {
+    --bs-card-bg: var(--fle-surface);
+    --bs-card-color: var(--fle-encre);
+    border: 1px solid var(--fle-bord);
+    border-radius: 1rem;
+    box-shadow: var(--fle-ombre);
+}
+
+.card-header,
+.card-footer {
+    background: transparent;
+    border-color: var(--fle-bord);
+}
+.card-header { font-weight: 600; }
+
+.list-group { --bs-list-group-bg: var(--fle-surface); --bs-list-group-border-color: var(--fle-bord); }
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--fle-encre);
+    --bs-table-border-color: var(--fle-bord);
+}
+.table > :not(caption) > * > * { vertical-align: middle; }
+.table thead.sticky-top th { background: var(--fle-surface); }
+
+.text-doux { color: var(--fle-doux) !important; }
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #0f1420;
+    color: var(--fle-encre);
+    border-color: rgba(255, 255, 255, .15);
+}
+[data-bs-theme="dark"] .btn-light { background: #232b3d; border-color: #232b3d; color: #e6e9f2; }
+[data-bs-theme="dark"] .dropdown-menu { --bs-dropdown-bg: var(--fle-surface); --bs-dropdown-link-color: var(--fle-encre); }
+[data-bs-theme="dark"] .modal { --bs-modal-bg: var(--fle-surface); }
+[data-bs-theme="dark"] .nav-tabs { --bs-nav-tabs-link-active-bg: var(--fle-surface); --bs-nav-tabs-link-active-color: var(--fle-encre); }
+
+/* --------------------------------------------------------------- en-tête de page */
+.entete {
+    background: var(--fle-entete);
+    color: #fff;
+    border-radius: 0 0 1.5rem 1.5rem;
+    padding: 2rem 0 2.25rem;
+    margin-bottom: 1.75rem;   /* plus de chevauchement avec le contenu */
+}
+.entete .text-doux { color: rgba(255, 255, 255, .82) !important; }
+.entete a.btn-light, .entete .btn-light { color: #3459e6; background: #fff; border-color: #fff; }
+
+/* --------------------------------------------------------------- indicateurs */
+.kpi { padding: 1.25rem 1.25rem 1rem; }
+.kpi-icone {
+    width: 2.5rem; height: 2.5rem;
+    display: inline-grid; place-items: center;
+    border-radius: .75rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.kpi .kpi-valeur {
+    font-family: "Nunito", sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    line-height: 1.1;
+}
+.kpi .kpi-libelle { color: var(--fle-doux); font-size: .875rem; }
+.fond-bleu { background: var(--fle-bleu-clair); color: var(--fle-bleu); }
+.fond-vert { background: var(--fle-vert-clair); color: var(--fle-vert); }
+.fond-orange { background: var(--fle-orange-clair); color: var(--fle-orange); }
+.fond-rouge { background: var(--fle-rouge-clair); color: var(--fle-rouge); }
+
+/* --------------------------------------------------------------- page publique (apprenants) */
+.page-publique { font-size: 1.125rem; }
+
+.jour-titre {
+    font-family: "Nunito", sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    margin: 1.75rem 0 .75rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.seance {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--fle-surface);
+    border-radius: 1rem;
+    border: 1px solid var(--fle-bord);
+    border-left: 6px solid var(--bs-success);
+    margin-bottom: .75rem;
+}
+.seance.statut-ANNULEE { border-left-color: var(--bs-danger); background: var(--fle-annulee); }
+.seance.statut-REPORTEE { border-left-color: var(--bs-warning); background: var(--fle-reportee); }
+.seance.statut-ANNULEE .seance-heure { text-decoration: line-through; color: var(--fle-doux); }
+
+.seance-heure {
+    font-family: "Nunito", sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    min-width: 5.5rem;
+}
+.seance-icone { font-size: 2rem; line-height: 1; }
+
+.alerte-publique {
+    border-radius: 1rem;
+    border: 2px solid;
+    padding: 1rem 1.25rem;
+    margin-bottom: .75rem;
+    display: flex;
+    gap: .9rem;
+    align-items: flex-start;
+    background: var(--fle-surface);
+}
+.alerte-publique.ANNULEE { border-color: var(--bs-danger); }
+.alerte-publique.REPORTEE { border-color: var(--bs-warning); }
+.alerte-publique i { font-size: 1.75rem; }
+
+.legende span { white-space: nowrap; }
+
+/* --------------------------------------------------------------- saisie */
+.compteur {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+}
+.compteur input {
+    width: 6rem;
+    text-align: center;
+    font-family: "Nunito", sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    padding: .25rem;
+}
+.compteur .btn {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+/* --------------------------------------------------------------- onglets */
+.nav-tabs .nav-link { font-weight: 600; }
+
+/* --------------------------------------------------------------- bouton thème */
+.bouton-theme {
+    width: 2.25rem; height: 2.25rem;
+    display: inline-grid; place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--fle-bord);
+    background: transparent;
+    color: var(--fle-encre);
+}
+.bouton-theme:hover { background: var(--fle-bleu-clair); color: var(--fle-bleu); }
+.bouton-theme .icone-sombre { display: none; }
+[data-bs-theme="dark"] .bouton-theme .icone-clair { display: none; }
+[data-bs-theme="dark"] .bouton-theme .icone-sombre { display: inline; }
+
+/* --------------------------------------------------------------- pied de page */
+.pied a { color: var(--fle-doux); text-decoration: none; }
+.pied a:hover { color: var(--fle-bleu); text-decoration: underline; }
+.pied .pied-titre {
+    font-family: "Nunito", sans-serif;
+    font-weight: 800;
+    font-size: .95rem;
+    color: var(--fle-encre);
+    margin-bottom: .75rem;
+}
+.pied .reseau {
+    width: 2.25rem; height: 2.25rem;
+    display: inline-grid; place-items: center;
+    border-radius: 50%;
+    background: var(--fle-bleu-clair);
+    color: var(--fle-bleu);
+    font-size: 1.05rem;
+}
+.pied .reseau:hover { background: var(--fle-bleu); color: #fff; text-decoration: none; }
+
+/* --------------------------------------------------------------- affiche imprimable (toujours claire) */
+.affiche {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: #fff !important;
+    color: #1f2a44;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    text-align: center;
+}
+.affiche .text-doux { color: #6b7590 !important; }
+.affiche h1 { font-size: 2.75rem; }
+#qrcode { display: inline-block; padding: 1rem; background: #fff; border-radius: 1rem; border: 1px solid #e5e7eb; }
+#qrcode img, #qrcode canvas { margin: 0 auto; }
+
+@media print {
+    body { background: #fff; }
+    .affiche { box-shadow: none; border: 0; padding: 0; }
+    .card { box-shadow: none; }
+}

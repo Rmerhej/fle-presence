@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Confidentialité')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main>
+    <section class="entete">
+        <div class="container">
+            <h1 class="h2 mb-1">Confidentialité</h1>
+            <p class="text-doux mb-0">Quelles données sont enregistrées, et pourquoi.</p>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 820px;">
+
+        <div class="card mb-3">
+            <div class="card-body d-flex gap-3">
+                <span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>
+                <div>
+                    <h2 class="h5">Apprenants</h2>
+                    <p class="mb-0">Aucune donnée personnelle n'est enregistrée sur les apprenants : pas de nom, pas d'adresse,
+                        pas de téléphone, pas d'email. La page des cours se consulte <strong>sans compte</strong>.
+                        Les bénévoles n'enregistrent que le <strong>nombre</strong> d'apprenants présents à chaque séance.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body d-flex gap-3">
+                <span class="kpi-icone fond-bleu"><i class="bi bi-person-badge"></i></span>
+                <div>
+                    <h2 class="h5">Bénévoles et responsables</h2>
+                    <p class="mb-2">Pour se connecter, un compte contient uniquement :</p>
+                    <ul class="mb-2">
+                        <li>un identifiant et un nom affiché (le prénom suffit) ;</li>
+                        <li>un mot de passe, enregistré <strong>chiffré</strong> (personne ne peut le lire) ;</li>
+                        <li>l'unité locale et le rôle (bénévole ou responsable).</li>
+                    </ul>
+                    <p class="mb-0">Chaque saisie de présences garde l'identifiant de la personne qui l'a faite ou modifiée,
+                        pour pouvoir corriger une erreur. Ces informations servent uniquement à l'organisation des cours
+                        et aux bilans de l'association. Pour faire supprimer un compte, adressez-vous au responsable de votre unité.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body d-flex gap-3">
+                <span class="kpi-icone fond-orange"><i class="bi bi-cookie"></i></span>
+                <div>
+                    <h2 class="h5">Cookies et stockage</h2>
+                    <p class="mb-0">Aucun cookie publicitaire ni de mesure d'audience. Le site utilise seulement
+                        un cookie de session, nécessaire pour rester connecté, et mémorise dans votre navigateur
+                        votre choix de mode clair ou sombre.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body d-flex gap-3">
+                <span class="kpi-icone fond-rouge"><i class="bi bi-envelope"></i></span>
+                <div>
+                    <h2 class="h5">Vos droits</h2>
+                    <p class="mb-0">Conformément au RGPD, vous pouvez demander l'accès, la rectification ou la suppression
+                        des données vous concernant auprès du responsable de votre unité locale.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
