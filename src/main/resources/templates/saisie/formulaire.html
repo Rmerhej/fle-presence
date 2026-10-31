@@ -6,7 +6,7 @@
 <div th:replace="~{fragments/layout :: toasts}"></div>
 
 <main class="container py-4" style="max-width: 560px;">
-    <a th:href="${param.retour != null and param.retour[0] == 'presences'} ? @{/responsable/presences} : @{/saisie}"
+    <a th:href="${retour == 'presences'} ? @{/responsable/presences} : @{/saisie}"
        class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Retour</a>
 
     <div class="card mt-3">
@@ -24,7 +24,7 @@
             </div>
 
             <form th:action="@{/saisie/{id}(id=${seance.id})}" method="post">
-                <input type="hidden" name="retour" th:value="${param.retour != null ? param.retour[0] : ''}">
+                <input type="hidden" name="retour" th:value="${retour}">
 
                 <div class="text-center mb-4">
                     <label class="form-label fw-semibold d-block" for="nbBenevoles">
