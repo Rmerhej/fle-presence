@@ -9,6 +9,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#3459e6">
     <title th:text="${titre} + ' · FLE Présence'">FLE Présence</title>
+    <!-- Application installable (PWA) -->
+    <link rel="manifest" th:if="${manifestUrl != null}" th:href="${manifestUrl}">
+    <link rel="manifest" th:unless="${manifestUrl != null}" th:href="@{/manifest.json}">
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/icons/favicon-32.png}">
+    <link rel="apple-touch-icon" th:href="@{/icons/apple-touch-icon.png}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cours FLE">
     <!-- Thème clair / sombre appliqué AVANT l'affichage (évite le flash blanc) -->
     <script>
         (function () {
@@ -57,6 +65,7 @@
                     <li class="nav-item"><a class="nav-link" th:href="@{/admin}"><i class="bi bi-speedometer2 me-1"></i>Tableau de bord</a></li>
                     <li class="nav-item"><a class="nav-link" th:href="@{/admin/unites}"><i class="bi bi-geo-alt me-1"></i>Unités</a></li>
                     <li class="nav-item"><a class="nav-link" th:href="@{/admin/utilisateurs}"><i class="bi bi-people me-1"></i>Comptes</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/admin/journal}"><i class="bi bi-clock-history me-1"></i>Historique</a></li>
                 </th:block>
                 <th:block sec:authorize="hasRole('RESPONSABLE')">
                     <li class="nav-item"><a class="nav-link" th:href="@{/responsable}"><i class="bi bi-calendar-week me-1"></i>Mon unité</a></li>

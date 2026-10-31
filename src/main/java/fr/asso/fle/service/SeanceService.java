@@ -7,6 +7,7 @@ import fr.asso.fle.repository.PresenceRepository;
 import fr.asso.fle.repository.SeanceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 /** Gestion du planning : génération, ajout, annulation et report des séances. */
 @Service
@@ -27,19 +32,35 @@ public class SeanceService {
     /** Nombre de semaines générées à l'avance automatiquement. */
     public static final int SEMAINES_AVANCE = 8;
 
+    private static final DateTimeFormatter JOUR = DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.FRANCE);
+
+    /** Événement publié quand des séances sont annulées ou déplacées (pour les notifications). */
+    public record SeancesModifiees(List<Long> seanceIds) {
+    }
+
+    /** Résultat d'une annulation sur une période. */
+    public record ResultatAnnulation(int annulees, int ignorees) {
+    }
+
     private final SeanceRepository seanceRepository;
     private final CreneauRepository creneauRepository;
     private final GroupeRepository groupeRepository;
     private final PresenceRepository presenceRepository;
+    private final JournalService journal;
+    private final ApplicationEventPublisher evenements;
 
     public SeanceService(SeanceRepository seanceRepository,
                          CreneauRepository creneauRepository,
                          GroupeRepository groupeRepository,
-                         PresenceRepository presenceRepository) {
+                         PresenceRepository presenceRepository,
+                         JournalService journal,
+                         ApplicationEventPublisher evenements) {
         this.seanceRepository = seanceRepository;
         this.creneauRepository = creneauRepository;
         this.groupeRepository = groupeRepository;
         this.presenceRepository = presenceRepository;
+        this.journal = journal;
+        this.evenements = evenements;
     }
 
     // ------------------------------------------------------------------ lecture
@@ -100,8 +121,12 @@ public class SeanceService {
             throw new RegleMetierException("Choisissez entre 1 et 26 semaines.");
         }
         LocalDate debut = LocalDate.now();
-        return genererDepuisCreneaux(creneauRepository.findActifsParUnite(unite),
+        int n = genererDepuisCreneaux(creneauRepository.findActifsParUnite(unite),
                 debut, debut.plusWeeks(semaines));
+        if (n > 0) {
+            journal.noter(unite, TypeAction.PLANNING_GENERE, n + " séance(s) ajoutée(s) sur " + semaines + " semaines");
+        }
+        return n;
     }
 
     /** Chaque nuit à 3h, prolonge le planning de toutes les unités. */
@@ -123,6 +148,8 @@ public class SeanceService {
         Creneau c = creneauRepository.save(new Creneau(groupe, jour, debut, fin, nettoyer(salle)));
         // Le planning des prochaines semaines est créé tout de suite.
         genererDepuisCreneaux(List.of(c), LocalDate.now(), LocalDate.now().plusWeeks(SEMAINES_AVANCE));
+        journal.noter(unite, TypeAction.CRENEAU_AJOUTE, groupe.getNom() + " · " + jourSemaine(jour)
+                + " " + heure(debut) + " – " + heure(fin));
         return c;
     }
 
@@ -143,6 +170,8 @@ public class SeanceService {
                 .filter(s -> s.getCreneau() != null && s.getCreneau().getId().equals(c.getId()))
                 .filter(s -> s.getStatut() == StatutSeance.PREVUE)
                 .forEach(seanceRepository::delete);
+        journal.noter(unite, TypeAction.CRENEAU_SUPPRIME, c.getGroupe().getNom() + " · "
+                + jourSemaine(c.getJourSemaine()) + " " + heure(c.getHeureDebut()));
     }
 
     // ------------------------------------------------------------- séances
@@ -160,7 +189,9 @@ public class SeanceService {
         }
         Seance s = new Seance(groupe, date, debut, fin, nettoyer(salle));
         s.setModifieeLe(LocalDateTime.now());
-        return seanceRepository.save(s);
+        s = seanceRepository.save(s);
+        journal.noter(unite, TypeAction.SEANCE_AJOUTEE, decrire(s));
+        return s;
     }
 
     @Transactional
@@ -173,6 +204,8 @@ public class SeanceService {
         s.setStatut(StatutSeance.ANNULEE);
         s.setMotif(nettoyer(motif));
         s.setModifieeLe(LocalDateTime.now());
+        journal.noter(unite, TypeAction.SEANCE_ANNULEE, decrire(s) + (s.getMotif() != null ? " · " + s.getMotif() : ""));
+        evenements.publishEvent(new SeancesModifiees(List.of(s.getId())));
     }
 
     @Transactional
@@ -203,6 +236,9 @@ public class SeanceService {
         s.setMotif(nettoyer(motif));
         s.setReporteeVers(nouvelle);
         s.setModifieeLe(LocalDateTime.now());
+        journal.noter(unite, TypeAction.SEANCE_REPORTEE, decrire(s) + " → " + JOUR.format(nouvelleDate)
+                + " " + heure(d) + (s.getMotif() != null ? " · " + s.getMotif() : ""));
+        evenements.publishEvent(new SeancesModifiees(List.of(s.getId())));
         return nouvelle;
     }
 
@@ -216,6 +252,51 @@ public class SeanceService {
         s.setStatut(StatutSeance.PREVUE);
         s.setMotif(null);
         s.setModifieeLe(LocalDateTime.now());
+        journal.noter(unite, TypeAction.SEANCE_RETABLIE, decrire(s));
+    }
+
+    /**
+     * Annule toutes les séances maintenues d'une période (vacances, fermeture de la salle...).
+     * Les séances qui ont déjà des présences sont laissées telles quelles.
+     *
+     * @param groupeIds groupes concernés ; vide ou null = tous les groupes de l'unité
+     */
+    @Transactional
+    public ResultatAnnulation annulerPeriode(UniteLocale unite, LocalDate du, LocalDate au,
+                                             List<Long> groupeIds, String motif) {
+        if (du == null || au == null) {
+            throw new RegleMetierException("Indiquez les dates de début et de fin.");
+        }
+        if (au.isBefore(du)) {
+            throw new RegleMetierException("La date de fin doit être après la date de début.");
+        }
+        if (ChronoUnit.DAYS.between(du, au) > 366) {
+            throw new RegleMetierException("La période ne peut pas dépasser un an.");
+        }
+        boolean tousLesGroupes = groupeIds == null || groupeIds.isEmpty();
+        List<Long> annulees = new ArrayList<>();
+        int ignorees = 0;
+        for (Seance s : seanceRepository.findParUniteEntre(unite, du, au)) {
+            if (s.getStatut() != StatutSeance.PREVUE
+                    || (!tousLesGroupes && !groupeIds.contains(s.getGroupe().getId()))) {
+                continue;
+            }
+            if (presenceRepository.findBySeance(s).isPresent()) {
+                ignorees++;
+                continue;
+            }
+            s.setStatut(StatutSeance.ANNULEE);
+            s.setMotif(nettoyer(motif));
+            s.setModifieeLe(LocalDateTime.now());
+            annulees.add(s.getId());
+        }
+        if (!annulees.isEmpty()) {
+            journal.noter(unite, TypeAction.ANNULATION_GROUPEE, annulees.size() + " séance(s) du "
+                    + JOUR.format(du) + " au " + JOUR.format(au)
+                    + (motif != null && !motif.isBlank() ? " · " + motif.strip() : ""));
+            evenements.publishEvent(new SeancesModifiees(annulees));
+        }
+        return new ResultatAnnulation(annulees.size(), ignorees);
     }
 
     // ------------------------------------------------------------- outils
@@ -242,6 +323,19 @@ public class SeanceService {
         if (!fin.isAfter(debut)) {
             throw new RegleMetierException("L'heure de fin doit être après l'heure de début.");
         }
+    }
+
+    /** « Débutants · mardi 4 novembre 14h00 » */
+    static String decrire(Seance s) {
+        return s.getGroupe().getNom() + " · " + JOUR.format(s.getDate()) + " " + heure(s.getHeureDebut());
+    }
+
+    static String heure(LocalTime t) {
+        return String.format("%dh%02d", t.getHour(), t.getMinute());
+    }
+
+    private static String jourSemaine(java.time.DayOfWeek j) {
+        return j.getDisplayName(java.time.format.TextStyle.FULL, Locale.FRANCE);
     }
 
     static String nettoyer(String texte) {

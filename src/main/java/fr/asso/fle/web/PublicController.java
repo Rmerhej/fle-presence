@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -94,6 +95,18 @@ public class PublicController {
         model.addAttribute("alertes", alertes);
         model.addAttribute("aujourdHui", aujourdHui);
         model.addAttribute("recemment", LocalDateTime.now().minusDays(7));
+
+        // Abonnement au calendrier (.ics) : agenda du téléphone, Google Agenda, téléchargement
+        String ics = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/u/{slug}/calendrier.ics")
+                .queryParamIfPresent("groupe", java.util.Optional.ofNullable(groupe))
+                .buildAndExpand(unite.getSlug()).toUriString();
+        String webcal = ics.replaceFirst("^https?://", "webcal://");
+        model.addAttribute("lienIcs", ics);
+        model.addAttribute("manifestUrl", "/u/" + unite.getSlug() + "/manifest.json");
+        model.addAttribute("lienWebcal", webcal);
+        model.addAttribute("lienGoogle", "https://calendar.google.com/calendar/render?cid="
+                + java.net.URLEncoder.encode(webcal, java.nio.charset.StandardCharsets.UTF_8));
         return "public/unite";
     }
 }

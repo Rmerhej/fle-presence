@@ -28,7 +28,7 @@
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card kpi"><span class="kpi-icone fond-orange"><i class="bi bi-person-badge"></i></span>
-                    <div class="kpi-valeur mt-2" th:text="${totaux.benevoles()}">16</div><div class="kpi-libelle">Présences bénévoles</div></div>
+                    <div class="kpi-valeur mt-2" th:text="${totaux.benevoles()}">16</div><div class="kpi-libelle">Présences bénévoles · <span th:text="${@fmt.heures(totaux.heuresBenevolat())}">32 h</span></div></div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card kpi"><span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>

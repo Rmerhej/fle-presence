@@ -1,0 +1,32 @@
+# Mise en ligne : à combiner avec docker-compose.yml
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# - Caddy reçoit le trafic sur les ports 80/443 et gère le HTTPS automatiquement
+# - l'application n'est plus exposée directement
+# - l'image est téléchargée depuis Docker Hub (pas de compilation sur le serveur)
+services:
+
+  app:
+    build: !reset null
+    image: ${APP_IMAGE:-rolandmerhej1/fle-presence:latest}
+    pull_policy: always
+    ports: !reset []
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      DOMAINE: ${DOMAINE:?Définir DOMAINE dans .env (ex. cours.mon-association.fr)}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploiement/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

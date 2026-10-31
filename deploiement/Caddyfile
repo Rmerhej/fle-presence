@@ -1,0 +1,13 @@
+# Caddy : HTTPS automatique (certificat Let's Encrypt) devant l'application.
+# Le nom de domaine vient de la variable DOMAINE du fichier .env.
+{$DOMAINE} {
+    encode zstd gzip
+    reverse_proxy app:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+}

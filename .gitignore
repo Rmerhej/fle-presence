@@ -13,3 +13,6 @@ target/
 .DS_Store
 Thumbs.db
 *.log
+
+# Sauvegardes de la base
+sauvegardes/

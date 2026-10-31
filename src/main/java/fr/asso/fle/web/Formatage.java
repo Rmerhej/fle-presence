@@ -64,6 +64,30 @@ public class Formatage {
         return String.format(FR, "%.1f", v);
     }
 
+    /** Heures : « 1 234 h » ou « 12,5 h » */
+    public String heures(double h) {
+        double arrondi = Math.round(h * 10) / 10.0;
+        return (arrondi == Math.rint(arrondi)
+                ? String.format(FR, "%,.0f", arrondi)
+                : String.format(FR, "%,.1f", arrondi)) + " h";
+    }
+
+    /** Évolution : « +12 % », « −5 % », ou chaîne vide s'il n'y a pas de comparaison. */
+    public String evolution(Integer pct) {
+        if (pct == null) {
+            return "";
+        }
+        return (pct > 0 ? "+" : pct < 0 ? "−" : "") + Math.abs(pct) + " %";
+    }
+
+    /** Classe Bootstrap pour colorer une évolution. */
+    public String couleurEvolution(Integer pct) {
+        if (pct == null || pct == 0) {
+            return "text-doux";
+        }
+        return pct > 0 ? "text-success" : "text-danger";
+    }
+
     private static String majuscule(String s) {
         return s.isEmpty() ? s : s.substring(0, 1).toUpperCase(FR) + s.substring(1);
     }

@@ -70,3 +70,137 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+/* ======================================================================
+   Application installable + notifications des annulations
+   ====================================================================== */
+(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const estIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const installee = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+    // ------------------------------------------------ installation
+    let invitation = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        invitation = e;
+        const b = document.getElementById('bouton-installer');
+        if (b) b.classList.remove('d-none');
+    });
+
+    const toast = (texte, couleur = 'success') => {
+        const zone = document.getElementById('zone-toasts') || document.querySelector('.toast-container');
+        if (!zone) { alert(texte); return; }
+        const el = document.createElement('div');
+        el.className = `toast align-items-center text-bg-${couleur} border-0`;
+        el.setAttribute('role', 'status');
+        el.innerHTML = '<div class="d-flex"><div class="toast-body"></div>'
+            + '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button></div>';
+        el.querySelector('.toast-body').textContent = texte;
+        zone.appendChild(el);
+        bootstrap.Toast.getOrCreateInstance(el, { delay: 6000 }).show();
+    };
+
+    const base64VersOctets = (b64) => {
+        const rembourrage = '='.repeat((4 - (b64.length % 4)) % 4);
+        const brut = atob((b64 + rembourrage).replace(/-/g, '+').replace(/_/g, '/'));
+        return Uint8Array.from([...brut].map((c) => c.charCodeAt(0)));
+    };
+
+    const envoyer = (url, corps) => fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(corps)
+    });
+
+    window.addEventListener('load', async () => {
+        let enregistrement;
+        try {
+            enregistrement = await navigator.serviceWorker.register('/sw.js');
+        } catch (e) {
+            return;
+        }
+
+        const boutonInstaller = document.getElementById('bouton-installer');
+        if (boutonInstaller) {
+            boutonInstaller.addEventListener('click', async () => {
+                if (!invitation) return;
+                invitation.prompt();
+                await invitation.userChoice;
+                invitation = null;
+                boutonInstaller.classList.add('d-none');
+            });
+        }
+
+        // ------------------------------------------------ notifications
+        const bouton = document.getElementById('bouton-notifications');
+        if (!bouton) return;
+
+        // Sur iPhone, les notifications ne marchent qu'une fois l'appli installée sur l'écran d'accueil.
+        if (estIOS && !installee) {
+            const aide = document.getElementById('aide-ios');
+            if (aide) aide.classList.remove('d-none');
+            return;
+        }
+        if (!('PushManager' in window) || !('Notification' in window)) return;
+
+        let reglages;
+        try {
+            reglages = await (await fetch('/push/cle')).json();
+        } catch (e) {
+            return;
+        }
+        if (!reglages.actives) return;
+
+        const libelle = bouton.querySelector('span');
+        const afficher = (abonne) => {
+            bouton.classList.toggle('btn-outline-primary', !abonne);
+            bouton.classList.toggle('btn-success', abonne);
+            bouton.querySelector('i').className = abonne ? 'bi bi-bell-fill me-1' : 'bi bi-bell me-1';
+            libelle.textContent = abonne ? 'Alertes activées' : 'Me prévenir';
+            bouton.title = abonne ? 'Touchez pour ne plus recevoir les alertes' : 'Recevoir une alerte si un cours est annulé';
+        };
+
+        let abonnement = await enregistrement.pushManager.getSubscription();
+        afficher(!!abonnement);
+        bouton.classList.remove('d-none');
+
+        bouton.addEventListener('click', async () => {
+            bouton.disabled = true;
+            try {
+                if (abonnement) {
+                    await envoyer('/push/desabonnement', { endpoint: abonnement.endpoint });
+                    await abonnement.unsubscribe();
+                    abonnement = null;
+                    afficher(false);
+                    toast('Vous ne recevrez plus les alertes.', 'secondary');
+                    return;
+                }
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    toast('Les alertes sont bloquées. Autorisez les notifications dans les réglages du navigateur.', 'warning');
+                    return;
+                }
+                abonnement = await enregistrement.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: base64VersOctets(reglages.cle)
+                });
+                const json = abonnement.toJSON();
+                const rep = await envoyer('/push/abonnement', {
+                    unite: bouton.dataset.unite,
+                    groupe: bouton.dataset.groupe ? Number(bouton.dataset.groupe) : null,
+                    endpoint: json.endpoint,
+                    keys: json.keys
+                });
+                if (!rep.ok) throw new Error('refus');
+                afficher(true);
+                toast('C\'est noté ! Vous serez prévenu si un cours est annulé ou déplacé.');
+            } catch (e) {
+                toast('Impossible d\'activer les alertes sur cet appareil.', 'danger');
+            } finally {
+                bouton.disabled = false;
+            }
+        });
+    });
+})();

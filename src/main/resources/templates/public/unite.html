@@ -57,6 +57,39 @@
             </div>
         </div>
 
+        <!-- Ne rien manquer : agenda du téléphone + notifications -->
+        <div class="card card-body mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="kpi-icone fond-bleu"><i class="bi bi-phone"></i></span>
+                <div class="me-auto">
+                    <div class="fw-semibold">Les cours dans mon téléphone</div>
+                    <div class="small text-doux">Les annulations apparaissent toutes seules.</div>
+                    <div class="small text-doux d-none" id="aide-ios">
+                        <i class="bi bi-box-arrow-up me-1"></i>Sur iPhone : touchez <strong>Partager</strong>, puis
+                        <strong>Sur l'écran d'accueil</strong>, et ouvrez l'appli pour activer les alertes.
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-calendar-plus me-1"></i>Mon agenda
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" th:href="${lienWebcal}"><i class="bi bi-apple me-2"></i>iPhone, iPad, Outlook</a></li>
+                        <li><a class="dropdown-item" th:href="${lienGoogle}" target="_blank" rel="noopener"><i class="bi bi-google me-2"></i>Android, Google Agenda</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="${lienIcs}" download><i class="bi bi-download me-2"></i>Télécharger (.ics)</a></li>
+                    </ul>
+                </div>
+                <button type="button" class="btn btn-outline-primary d-none" id="bouton-installer">
+                    <i class="bi bi-download me-1"></i>Installer l'appli
+                </button>
+                <button type="button" class="btn btn-outline-primary d-none" id="bouton-notifications"
+                        th:attr="data-unite=${unite.slug},data-groupe=${groupeChoisi}">
+                    <i class="bi bi-bell me-1"></i><span>Me prévenir</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Bandeau des alertes (reste visible après fermeture des toasts) -->
         <div th:unless="${#lists.isEmpty(alertes)}" class="mt-4">
             <h2 class="h5"><i class="bi bi-bell-fill text-warning me-2"></i>Attention, changements</h2>

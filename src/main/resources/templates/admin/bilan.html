@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bilan annuel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+
+    <!-- Barre d'outils (non imprimée) -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3 d-print-none" style="max-width:210mm;margin:0 auto">
+        <a th:href="@{/admin(annee=${annee},uniteId=${uniteId})}" class="small text-decoration-none me-auto">
+            <i class="bi bi-arrow-left me-1"></i>Tableau de bord</a>
+        <div class="input-group input-group-sm" style="width:auto">
+            <span class="input-group-text">Valorisation</span>
+            <input type="number" min="0" step="0.01" class="form-control" id="taux" placeholder="€ / heure" style="width:7rem"
+                   aria-label="Taux horaire de valorisation du bénévolat en euros">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Imprimer / enregistrer en PDF</button>
+    </div>
+
+    <!-- Le bilan reste en thème clair, même en mode sombre, pour l'impression -->
+    <article class="bilan card p-4 p-md-5" data-bs-theme="light">
+
+        <header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <p class="text-primary fw-semibold mb-1"><i class="bi bi-chat-quote-fill me-1"></i>Cours de français pour adultes</p>
+                <h1 class="mb-1">Bilan d'activité <span th:text="${annee}">2026</span></h1>
+                <p class="text-doux mb-0" th:text="${perimetre}">Toutes les unités locales</p>
+            </div>
+            <div class="small text-doux text-end">
+                Édité le <span th:text="${@fmt.dateHeure(genereLe)}"></span><br>
+                <span th:if="${annee == genereLe.year}">Année en cours</span>
+            </div>
+        </header>
+
+        <!-- Chiffres clés -->
+        <h2 class="h5 mb-3">Chiffres clés</h2>
+        <div class="row g-3 mb-2" th:with="c=${comparaison}">
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="kpi-libelle text-doux small">Séances réalisées</div>
+                    <div class="fs-3 fw-bold" th:text="${c.actuel().seances()}">0</div>
+                    <div class="small" th:classappend="${@fmt.couleurEvolution(c.evoSeances())}"
+                         th:text="${@fmt.evolution(c.evoSeances())}"></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="text-doux small">Présences d'apprenants</div>
+                    <div class="fs-3 fw-bold" th:text="${c.actuel().apprenants()}">0</div>
+                    <div class="small" th:classappend="${@fmt.couleurEvolution(c.evoApprenants())}"
+                         th:text="${@fmt.evolution(c.evoApprenants())}"></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="text-doux small">Apprenants par séance (moyenne)</div>
+                    <div class="fs-3 fw-bold" th:text="${@fmt.decimal(c.actuel().moyenneApprenants())}">0</div>
+                    <div class="small" th:classappend="${@fmt.couleurEvolution(c.evoMoyenne())}"
+                         th:text="${@fmt.evolution(c.evoMoyenne())}"></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="text-doux small">Heures de cours suivies</div>
+                    <div class="fs-3 fw-bold" th:text="${@fmt.heures(c.actuel().heuresApprenants())}">0 h</div>
+                    <div class="small text-doux">apprenants présents × durée</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="text-doux small">Présences de bénévoles</div>
+                    <div class="fs-3 fw-bold" th:text="${c.actuel().benevoles()}">0</div>
+                    <div class="small" th:classappend="${@fmt.couleurEvolution(c.evoBenevoles())}"
+                         th:text="${@fmt.evolution(c.evoBenevoles())}"></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="border rounded-3 p-3 h-100" style="border-color:#3459e6 !important">
+                    <div class="text-doux small">Heures de bénévolat</div>
+                    <div class="fs-3 fw-bold text-primary" th:text="${@fmt.heures(c.actuel().heuresBenevolat())}"
+                         th:attr="data-heures=${c.actuel().heuresBenevolat()}" id="heures-benevolat">0 h</div>
+                    <div class="small" th:classappend="${@fmt.couleurEvolution(c.evoHeuresBenevolat())}"
+                         th:text="${@fmt.evolution(c.evoHeuresBenevolat())}"></div>
+                    <div class="small fw-semibold d-none" id="valorisation"></div>
+                </div>
+            </div>
+        </div>
+        <p class="small text-doux mb-4">
+            Évolutions <span th:text="${comparaison.libelle()}">par rapport à 2025</span>
+            (<span th:text="${comparaison.precedent().seances()}">0</span> séances,
+            <span th:text="${comparaison.precedent().apprenants()}">0</span> présences d'apprenants,
+            <span th:text="${@fmt.heures(comparaison.precedent().heuresBenevolat())}">0 h</span> de bénévolat).
+        </p>
+
+        <!-- Graphique -->
+        <h2 class="h5 mb-3">Présences d'apprenants par mois</h2>
+        <div class="mb-4" style="position:relative;height:260px"><canvas id="graphique-bilan"></canvas></div>
+
+        <!-- Par unité -->
+        <h2 class="h5 mb-3">Par unité locale</h2>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm align-middle">
+                <thead><tr class="small text-doux">
+                    <th>Unité</th><th class="text-end">Séances</th><th class="text-end">Apprenants</th>
+                    <th class="text-end">Moy. / séance</th><th class="text-end">Bénévoles</th><th class="text-end">Heures bénévolat</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="l : ${parUnite}">
+                    <td class="fw-semibold" th:text="${l.unite()}"></td>
+                    <td class="text-end" th:text="${l.seances()}"></td>
+                    <td class="text-end" th:text="${l.apprenants()}"></td>
+                    <td class="text-end" th:text="${@fmt.decimal(l.moyenneApprenants())}"></td>
+                    <td class="text-end" th:text="${l.benevoles()}"></td>
+                    <td class="text-end" th:text="${@fmt.heures(l.heuresBenevolat())}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(parUnite)}"><td colspan="6" class="text-center text-doux py-3">Aucune présence enregistrée.</td></tr>
+                </tbody>
+                <tfoot th:unless="${#lists.isEmpty(parUnite)}">
+                <tr class="fw-bold">
+                    <td>Total</td>
+                    <td class="text-end" th:text="${totaux.seances()}"></td>
+                    <td class="text-end" th:text="${totaux.apprenants()}"></td>
+                    <td class="text-end" th:text="${@fmt.decimal(totaux.moyenneApprenants())}"></td>
+                    <td class="text-end" th:text="${totaux.benevoles()}"></td>
+                    <td class="text-end" th:text="${@fmt.heures(totaux.heuresBenevolat())}"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Par mois -->
+        <h2 class="h5 mb-3">Par mois</h2>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm align-middle">
+                <thead><tr class="small text-doux">
+                    <th>Mois</th><th class="text-end">Séances</th><th class="text-end">Apprenants</th>
+                    <th class="text-end">Bénévoles</th><th class="text-end">Heures bénévolat</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="l : ${parMois}">
+                    <td th:text="${l.periode()}"></td>
+                    <td class="text-end" th:text="${l.seances()}"></td>
+                    <td class="text-end" th:text="${l.apprenants()}"></td>
+                    <td class="text-end" th:text="${l.benevoles()}"></td>
+                    <td class="text-end" th:text="${@fmt.heures(l.heuresBenevolat())}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="small text-doux mb-0 border-top pt-3">
+            Données issues de l'application FLE Présence, saisies par les bénévoles après chaque séance.
+            Aucune donnée personnelle des apprenants n'est enregistrée : uniquement des nombres de présents.
+        </p>
+    </article>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const donnees = /*[[${graphique}]]*/ {mois: [], series: []};
+        const couleurs = ['#3459e6', '#2fb380', '#f4a100', '#da292e', '#7a4ff0', '#14a2b8', '#e85d9c', '#5c677d'];
+        Chart.defaults.color = '#6b7590';
+        new Chart(document.getElementById('graphique-bilan'), {
+            type: 'bar',
+            data: {
+                labels: donnees.mois,
+                datasets: donnees.series.map((s, i) => ({
+                    label: s.unite, data: s.apprenants, backgroundColor: couleurs[i % couleurs.length],
+                    borderRadius: 4, maxBarThickness: 32
+                }))
+            },
+            options: {
+                maintainAspectRatio: false, animation: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        // Valorisation du bénévolat (calcul dans le navigateur, rien n'est enregistré)
+        const taux = document.getElementById('taux');
+        const sortie = document.getElementById('valorisation');
+        const heures = parseFloat(document.getElementById('heures-benevolat').dataset.heures || '0');
+        taux.addEventListener('input', () => {
+            const t = parseFloat(taux.value);
+            if (!t || t <= 0) { sortie.classList.add('d-none'); return; }
+            const montant = (heures * t).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+            sortie.textContent = 'Valorisation : ' + montant + ' (' + t.toLocaleString('fr-FR') + ' €/h)';
+            sortie.classList.remove('d-none');
+        });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hors connexion · FLE Présence</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; text-align: center;
+               font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f5f7fb; color: #1f2a44; padding: 1.5rem; }
+        img { width: 96px; height: 96px; border-radius: 22px; }
+        h1 { font-size: 1.5rem; margin: 1.25rem 0 .5rem; }
+        p { color: #6b7590; max-width: 22rem; margin: 0 auto 1.5rem; line-height: 1.5; }
+        button { font: inherit; font-weight: 600; color: #fff; background: #3459e6; border: 0; border-radius: .6rem;
+                 padding: .75rem 1.5rem; cursor: pointer; }
+        @media (prefers-color-scheme: dark) { body { background: #0f1420; color: #e6e9f2; } p { color: #9aa3bb; } }
+    </style>
+</head>
+<body>
+<main>
+    <img src="/icons/icon-192.png" alt="">
+    <h1>📶 Pas de connexion internet</h1>
+    <p>Reconnectez-vous pour voir les dates des cours à jour.</p>
+    <button onclick="location.reload()">Réessayer</button>
+</main>
+</body>
+</html>

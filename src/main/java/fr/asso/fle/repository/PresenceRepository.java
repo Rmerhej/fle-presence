@@ -27,44 +27,13 @@ public interface PresenceRepository extends JpaRepository<Presence, Long> {
                                      @Param("du") LocalDate du,
                                      @Param("au") LocalDate au);
 
-    /**
-     * Totaux par date et par unité.
-     * Colonnes : date, uniteId, uniteNom, nbSeances, totalBenevoles, totalApprenants
-     */
+    /** Présences d'une période (toutes unités si uniteId est null), pour les statistiques. */
     @Query("""
-            select s.date, u.id, u.nom, count(p), sum(p.nbBenevoles), sum(p.nbApprenants)
-            from Presence p join p.seance s join s.groupe g join g.unite u
+            select p from Presence p
+            join fetch p.seance s join fetch s.groupe g join fetch g.unite u
             where s.date between :du and :au and (:uniteId is null or u.id = :uniteId)
-            group by s.date, u.id, u.nom
-            order by s.date desc, u.nom
             """)
-    List<Object[]> totauxParJour(@Param("du") LocalDate du,
+    List<Presence> findPourStats(@Param("du") LocalDate du,
                                  @Param("au") LocalDate au,
                                  @Param("uniteId") Long uniteId);
-
-    /**
-     * Totaux par mois et par unité pour une année.
-     * Colonnes : mois (1-12), uniteId, uniteNom, nbSeances, totalBenevoles, totalApprenants
-     */
-    @Query("""
-            select extract(month from s.date), u.id, u.nom, count(p), sum(p.nbBenevoles), sum(p.nbApprenants)
-            from Presence p join p.seance s join s.groupe g join g.unite u
-            where extract(year from s.date) = :annee and (:uniteId is null or u.id = :uniteId)
-            group by extract(month from s.date), u.id, u.nom
-            order by extract(month from s.date), u.nom
-            """)
-    List<Object[]> totauxParMois(@Param("annee") int annee, @Param("uniteId") Long uniteId);
-
-    /**
-     * Totaux par année et par unité.
-     * Colonnes : annee, uniteId, uniteNom, nbSeances, totalBenevoles, totalApprenants
-     */
-    @Query("""
-            select extract(year from s.date), u.id, u.nom, count(p), sum(p.nbBenevoles), sum(p.nbApprenants)
-            from Presence p join p.seance s join s.groupe g join g.unite u
-            where (:uniteId is null or u.id = :uniteId)
-            group by extract(year from s.date), u.id, u.nom
-            order by extract(year from s.date) desc, u.nom
-            """)
-    List<Object[]> totauxParAnnee(@Param("uniteId") Long uniteId);
 }

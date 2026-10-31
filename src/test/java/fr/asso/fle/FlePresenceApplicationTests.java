@@ -6,6 +6,7 @@ import fr.asso.fle.repository.UniteLocaleRepository;
 import fr.asso.fle.repository.UtilisateurRepository;
 import fr.asso.fle.service.PresenceService;
 import fr.asso.fle.service.RegleMetierException;
+import fr.asso.fle.service.SeanceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,6 +34,7 @@ class FlePresenceApplicationTests {
     @Autowired SeanceRepository seanceRepository;
     @Autowired UniteLocaleRepository uniteRepository;
     @Autowired UtilisateurRepository utilisateurRepository;
+    @Autowired SeanceService seanceService;
 
     @Test
     void pagePubliqueAccessibleSansCompte() throws Exception {
@@ -49,6 +51,21 @@ class FlePresenceApplicationTests {
         mvc.perform(get("/plan-du-site")).andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Cours à Chatou")));
         mvc.perform(get("/confidentialite")).andExpect(status().isOk());
+    }
+
+    @Test
+    void calendrierEtManifesteDeLUnite() throws Exception {
+        mvc.perform(get("/u/chatou/calendrier.ics"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/calendar"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("BEGIN:VCALENDAR")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("STATUS:CANCELLED")));
+        mvc.perform(get("/u/chatou/manifest.json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/u/chatou")));
+        mvc.perform(get("/manifest.json")).andExpect(status().isOk());
+        mvc.perform(get("/push/cle")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("cle")));
     }
 
     @Test
@@ -85,6 +102,9 @@ class FlePresenceApplicationTests {
         mvc.perform(get("/admin/export.csv").param("type", "mois")).andExpect(status().isOk());
         mvc.perform(get("/admin/unites")).andExpect(status().isOk());
         mvc.perform(get("/admin/utilisateurs")).andExpect(status().isOk());
+        mvc.perform(get("/admin/bilan")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Heures de bénévolat")));
+        mvc.perform(get("/admin/journal")).andExpect(status().isOk());
     }
 
     @Test
@@ -120,5 +140,19 @@ class FlePresenceApplicationTests {
         assertThatThrownBy(() -> presenceService.enregistrer(seance.getId(), 1, 5, null, benevoleChatou))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("unité");
+    }
+
+    @Test
+    @Transactional
+    void annulationDUnePeriodeEtHistorique() {
+        UniteLocale chatou = uniteRepository.findBySlugAndActiveTrue("chatou").orElseThrow();
+        LocalDate debut = LocalDate.now().plusWeeks(3);
+        LocalDate fin = debut.plusDays(13);
+
+        SeanceService.ResultatAnnulation r = seanceService.annulerPeriode(chatou, debut, fin, null, "Vacances");
+
+        assertThat(r.annulees()).isGreaterThan(0);
+        assertThat(seanceRepository.findParUniteEntre(chatou, debut, fin))
+                .allMatch(s -> s.getStatut() != StatutSeance.PREVUE);
     }
 }

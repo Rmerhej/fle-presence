@@ -28,13 +28,25 @@ public class AdminController {
     private final StatsService statsService;
     private final AdministrationService administrationService;
     private final UtilisateurCourant utilisateurCourant;
+    private final fr.asso.fle.service.JournalService journalService;
 
     public AdminController(StatsService statsService,
                            AdministrationService administrationService,
-                           UtilisateurCourant utilisateurCourant) {
+                           UtilisateurCourant utilisateurCourant,
+                           fr.asso.fle.service.JournalService journalService) {
         this.statsService = statsService;
         this.administrationService = administrationService;
         this.utilisateurCourant = utilisateurCourant;
+        this.journalService = journalService;
+    }
+
+    /** Historique de toutes les unités (ou d'une seule). */
+    @GetMapping("/journal")
+    public String journal(@RequestParam(required = false) Long uniteId, Model model) {
+        model.addAttribute("uniteId", uniteId);
+        model.addAttribute("unites", administrationService.toutesLesUnites());
+        model.addAttribute("historique", journalService.tout(uniteId, 300));
+        return "admin/journal";
     }
 
     // ================================================================ tableau de bord
@@ -66,6 +78,7 @@ public class AdminController {
         model.addAttribute("au", fin);
         model.addAttribute("unites", administrationService.toutesLesUnites());
         model.addAttribute("totauxAnnee", statsService.totaux(parMois));
+        model.addAttribute("comparaison", statsService.comparaison(an, uniteId));
         model.addAttribute("parMois", parMois);
         model.addAttribute("parJour", parJour);
         model.addAttribute("totauxPeriode", statsService.totaux(parJour));
@@ -91,20 +104,45 @@ public class AdminController {
         };
 
         StringBuilder csv = new StringBuilder("﻿"); // BOM : accents corrects dans Excel
-        csv.append("Période;Unité;Séances;Bénévoles présents;Apprenants présents;Moyenne apprenants/séance\n");
+        csv.append("Période;Unité;Séances;Bénévoles présents;Apprenants présents;Moyenne apprenants/séance;"
+                + "Heures de bénévolat;Heures de cours suivies\n");
         for (LigneStat l : lignes) {
             csv.append(l.periode()).append(';')
                .append(l.unite().replace(";", ",")).append(';')
                .append(l.seances()).append(';')
                .append(l.benevoles()).append(';')
                .append(l.apprenants()).append(';')
-               .append(String.format(Locale.FRANCE, "%.1f", l.moyenneApprenants())).append('\n');
+               .append(String.format(Locale.FRANCE, "%.1f", l.moyenneApprenants())).append(';')
+               .append(String.format(Locale.FRANCE, "%.1f", l.heuresBenevolat())).append(';')
+               .append(String.format(Locale.FRANCE, "%.1f", l.heuresApprenants())).append('\n');
         }
         String nom = "presences-" + type + "-" + aujourdHui + ".csv";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nom + "\"")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Bilan d'activité annuel, mis en page pour l'impression (« Enregistrer en PDF »). */
+    @GetMapping("/bilan")
+    public String bilan(@RequestParam(required = false) Integer annee,
+                        @RequestParam(required = false) Long uniteId,
+                        Model model) {
+        int an = annee != null ? annee : LocalDate.now().getYear();
+        List<LigneStat> parUnite = statsService.parUnite(an, uniteId);
+        model.addAttribute("annee", an);
+        model.addAttribute("uniteId", uniteId);
+        model.addAttribute("perimetre", uniteId == null ? "Toutes les unités locales"
+                : administrationService.toutesLesUnites().stream()
+                    .filter(u -> u.getId().equals(uniteId)).map(u -> "Unité de " + u.getNom())
+                    .findFirst().orElse(""));
+        model.addAttribute("comparaison", statsService.comparaison(an, uniteId));
+        model.addAttribute("parUnite", parUnite);
+        model.addAttribute("totaux", statsService.totaux(parUnite));
+        model.addAttribute("parMois", statsService.parMoisToutesUnites(an, uniteId));
+        model.addAttribute("graphique", statsService.graphiqueMensuel(an, uniteId));
+        model.addAttribute("genereLe", java.time.LocalDateTime.now());
+        return "admin/bilan";
     }
 
     // ================================================================ unités

@@ -46,9 +46,44 @@ services:
       APP_LIEN_LINKEDIN: ${APP_LIEN_LINKEDIN:-}
       APP_LIEN_YOUTUBE: ${APP_LIEN_YOUTUBE:-}
       APP_LIEN_X: ${APP_LIEN_X:-}
+      APP_NOTIFICATIONS_SUJET: ${APP_NOTIFICATIONS_SUJET:-https://www.secours-catholique.org}
       TZ: Europe/Paris
     ports:
       - "${APP_PORT:-8080}:8080"
+
+  # Sauvegarde automatique de la base : chaque nuit dans ./sauvegardes, 14 dernières conservées
+  sauvegarde:
+    image: mysql:8.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_PWD: ${DB_ROOT_PASSWORD}
+      TZ: Europe/Paris
+      HEURE_SAUVEGARDE: ${HEURE_SAUVEGARDE:-02}
+      CONSERVER: ${SAUVEGARDES_CONSERVEES:-14}
+    volumes:
+      - ./sauvegardes:/sauvegardes
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sauvegarder() {
+          fichier="/sauvegardes/fle_presence_$$(date +%Y-%m-%d_%H%M).sql.gz"
+          if mysqldump -h db -uroot --single-transaction --routines --no-tablespaces fle_presence | gzip > "$$fichier"; then
+            echo "Sauvegarde OK : $$fichier"
+          else
+            echo "ÉCHEC de la sauvegarde" ; rm -f "$$fichier"
+          fi
+          ls -1t /sauvegardes/*.sql.gz 2>/dev/null | tail -n +$$((CONSERVER + 1)) | while read -r ancien; do rm -f "$$ancien"; done
+        }
+        sauvegarder
+        while true; do
+          sleep 3000
+          if [ "$$(date +%H)" = "$$HEURE_SAUVEGARDE" ] && [ ! -f "/tmp/fait-$$(date +%F)" ]; then
+            sauvegarder && touch "/tmp/fait-$$(date +%F)"
+          fi
+        done
 
   phpmyadmin:
     image: phpmyadmin:5

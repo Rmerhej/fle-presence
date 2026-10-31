@@ -30,13 +30,19 @@ public class ResponsableController {
     private final AdministrationService administrationService;
     private final StatsService statsService;
     private final fr.asso.fle.repository.SeanceRepository seanceRepository;
+    private final JournalService journalService;
+    private final NotificationService notificationService;
 
     public ResponsableController(UtilisateurCourant utilisateurCourant,
                                  SeanceService seanceService,
                                  PresenceService presenceService,
                                  AdministrationService administrationService,
                                  StatsService statsService,
-                                 fr.asso.fle.repository.SeanceRepository seanceRepository) {
+                                 fr.asso.fle.repository.SeanceRepository seanceRepository,
+                                 JournalService journalService,
+                                 NotificationService notificationService) {
+        this.journalService = journalService;
+        this.notificationService = notificationService;
         this.utilisateurCourant = utilisateurCourant;
         this.seanceService = seanceService;
         this.presenceService = presenceService;
@@ -69,6 +75,8 @@ public class ResponsableController {
         model.addAttribute("jours", DayOfWeek.values());
         model.addAttribute("aujourdHui", aujourdHui);
         model.addAttribute("lienPublic", lienPublic(unite));
+        model.addAttribute("historique", journalService.pourUnite(unite, 100));
+        model.addAttribute("abonnes", notificationService.nombreAbonnes(unite));
         return "responsable/tableau";
     }
 
@@ -81,11 +89,16 @@ public class ResponsableController {
         List<Presence> presences = presenceService.parUniteEntre(unite, m.atDay(1), m.atEndOfMonth());
         long benevoles = presences.stream().mapToLong(Presence::getNbBenevoles).sum();
         long apprenants = presences.stream().mapToLong(Presence::getNbApprenants).sum();
+        double heuresBenevolat = presences.stream()
+                .mapToDouble(p -> p.getNbBenevoles() * duree(p.getSeance())).sum();
+        double heuresApprenants = presences.stream()
+                .mapToDouble(p -> p.getNbApprenants() * duree(p.getSeance())).sum();
 
         model.addAttribute("unite", unite);
         model.addAttribute("mois", m);
         model.addAttribute("presences", presences);
-        model.addAttribute("totaux", new StatsService.Totaux(presences.size(), benevoles, apprenants));
+        model.addAttribute("totaux", new StatsService.Totaux(presences.size(), benevoles, apprenants,
+                heuresBenevolat, heuresApprenants));
         model.addAttribute("moisPrecedent", m.minusMonths(1));
         model.addAttribute("moisSuivant", m.plusMonths(1));
         return "responsable/presences";
@@ -138,6 +151,27 @@ public class ResponsableController {
                            RedirectAttributes ra) {
         return executer(ra, "planning", "Séance déplacée : les apprenants verront l'alerte sur la page publique.",
                 () -> seanceService.reporter(monUnite(), id, date, debut, fin, motif));
+    }
+
+    /** Annulation de toutes les séances d'une période (vacances...). */
+    @PostMapping("/seances/annuler-periode")
+    public String annulerPeriode(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
+                                 @RequestParam(name = "groupes", required = false) List<Long> groupes,
+                                 @RequestParam(required = false) String motif,
+                                 RedirectAttributes ra) {
+        try {
+            SeanceService.ResultatAnnulation r = seanceService.annulerPeriode(monUnite(), du, au, groupes, motif);
+            if (r.annulees() == 0) {
+                ra.addFlashAttribute("erreur", "Aucune séance maintenue à annuler sur cette période.");
+            } else {
+                ra.addFlashAttribute("succes", r.annulees() + " séance(s) annulée(s). Les apprenants verront l'alerte."
+                        + (r.ignorees() > 0 ? " " + r.ignorees() + " séance(s) déjà saisie(s) laissée(s) telle(s) quelle(s)." : ""));
+            }
+        } catch (RegleMetierException e) {
+            ra.addFlashAttribute("erreur", e.getMessage());
+        }
+        return "redirect:/responsable?onglet=planning";
     }
 
     @PostMapping("/seances/{id}/retablir")
@@ -211,6 +245,10 @@ public class ResponsableController {
             ra.addFlashAttribute("erreur", e.getMessage());
         }
         return "redirect:/responsable?onglet=" + onglet;
+    }
+
+    private static double duree(Seance s) {
+        return java.time.Duration.between(s.getHeureDebut(), s.getHeureFin()).toMinutes() / 60.0;
     }
 
     private static String lienPublic(UniteLocale unite) {

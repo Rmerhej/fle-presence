@@ -284,8 +284,22 @@ footer.surface {
 #qrcode { display: inline-block; padding: 1rem; background: #fff; border-radius: 1rem; border: 1px solid #e5e7eb; }
 #qrcode img, #qrcode canvas { margin: 0 auto; }
 
+/* --------------------------------------------------------------- bilan annuel (A4) */
+.bilan {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: #fff !important;
+    color: #1f2a44;
+}
+.bilan h1 { font-size: 2rem; }
+
 @media print {
+    @page { size: A4; margin: 14mm; }
     body { background: #fff; }
+    .bilan { border: 0 !important; padding: 0 !important; max-width: none; }
+    .bilan h2 { break-after: avoid; }
+    .bilan table { break-inside: auto; }
+    .bilan tr { break-inside: avoid; }
     .affiche { box-shadow: none; border: 0; padding: 0; }
     .card { box-shadow: none; }
 }

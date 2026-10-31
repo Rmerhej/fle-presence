@@ -22,15 +22,18 @@ public class AdministrationService {
     private final UtilisateurRepository utilisateurRepository;
     private final GroupeRepository groupeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JournalService journal;
 
     public AdministrationService(UniteLocaleRepository uniteRepository,
                                  UtilisateurRepository utilisateurRepository,
                                  GroupeRepository groupeRepository,
-                                 PasswordEncoder passwordEncoder) {
+                                 PasswordEncoder passwordEncoder,
+                                 JournalService journal) {
         this.uniteRepository = uniteRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.groupeRepository = groupeRepository;
         this.passwordEncoder = passwordEncoder;
+        this.journal = journal;
     }
 
     // ------------------------------------------------------------------ unités
@@ -57,7 +60,9 @@ public class AdministrationService {
         if (uniteRepository.existsBySlug(slug)) {
             throw new RegleMetierException("Une unité porte déjà ce nom.");
         }
-        return uniteRepository.save(new UniteLocale(nom.strip(), slug, SeanceService.nettoyer(adresse)));
+        UniteLocale u = uniteRepository.save(new UniteLocale(nom.strip(), slug, SeanceService.nettoyer(adresse)));
+        journal.noter(u, TypeAction.UNITE_CREEE, u.getNom());
+        return u;
     }
 
     @Transactional
@@ -65,6 +70,7 @@ public class AdministrationService {
         UniteLocale u = uniteRepository.findById(id)
                 .orElseThrow(() -> new RegleMetierException("Unité introuvable."));
         u.setActive(!u.isActive());
+        journal.noter(u, TypeAction.UNITE_MODIFIEE, u.getNom() + (u.isActive() ? " réactivée" : " désactivée"));
     }
 
     // ------------------------------------------------------------------ groupes
@@ -79,7 +85,9 @@ public class AdministrationService {
         if (nom == null || nom.isBlank()) {
             throw new RegleMetierException("Le nom du groupe est obligatoire.");
         }
-        return groupeRepository.save(new Groupe(nom.strip(), SeanceService.nettoyer(niveau), unite));
+        Groupe g = groupeRepository.save(new Groupe(nom.strip(), SeanceService.nettoyer(niveau), unite));
+        journal.noter(unite, TypeAction.GROUPE_CREE, g.getNom());
+        return g;
     }
 
     @Transactional
@@ -90,6 +98,7 @@ public class AdministrationService {
             throw new RegleMetierException("Ce groupe n'appartient pas à votre unité.");
         }
         g.setActif(false);
+        journal.noter(unite, TypeAction.GROUPE_RETIRE, g.getNom());
     }
 
     // ------------------------------------------------------------------ comptes
@@ -134,8 +143,10 @@ public class AdministrationService {
         if (role == Role.RESPONSABLE && utilisateurRepository.existsByUniteAndRoleAndActifTrue(unite, Role.RESPONSABLE)) {
             throw new RegleMetierException("Cette unité a déjà un responsable actif. Désactivez-le d'abord.");
         }
-        return utilisateurRepository.save(new Utilisateur(identifiant,
+        Utilisateur cree = utilisateurRepository.save(new Utilisateur(identifiant,
                 passwordEncoder.encode(motDePasse), nomAffiche.strip(), role, unite));
+        journal.noter(unite, TypeAction.COMPTE_CREE, cree.getUsername() + " (" + role.getLibelle() + ")");
+        return cree;
     }
 
     /** Création d'un compte bénévole par le responsable, dans sa propre unité. */
@@ -155,6 +166,7 @@ public class AdministrationService {
             throw new RegleMetierException("Cette unité a déjà un responsable actif.");
         }
         u.setActif(!u.isActif());
+        journal.noter(u.getUnite(), TypeAction.COMPTE_MODIFIE, u.getUsername() + (u.isActif() ? " réactivé" : " désactivé"));
     }
 
     @Transactional
@@ -164,12 +176,15 @@ public class AdministrationService {
             throw new RegleMetierException("Ce bénévole n'appartient pas à votre unité.");
         }
         u.setActif(!u.isActif());
+        journal.noter(unite, TypeAction.COMPTE_MODIFIE, u.getUsername() + (u.isActif() ? " réactivé" : " désactivé"));
     }
 
     @Transactional
     public void changerMotDePasse(Long id, String motDePasse) {
         verifierMotDePasse(motDePasse);
-        compte(id).setPassword(passwordEncoder.encode(motDePasse));
+        Utilisateur u = compte(id);
+        u.setPassword(passwordEncoder.encode(motDePasse));
+        journal.noter(u.getUnite(), TypeAction.COMPTE_MODIFIE, u.getUsername() + " : mot de passe changé");
     }
 
     private Utilisateur compte(Long id) {

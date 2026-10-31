@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Historique')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+
+<main>
+    <section class="entete">
+        <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="text-doux mb-1">Administration</p>
+                <h1 class="h2 mb-0">Historique des modifications</h1>
+            </div>
+            <form th:action="@{/admin/journal}" method="get">
+                <select name="uniteId" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Unité">
+                    <option value="">Toutes les unités</option>
+                    <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}" th:selected="${u.id == uniteId}"></option>
+                </select>
+            </form>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 900px;">
+        <p class="small text-doux"><i class="bi bi-info-circle me-1"></i>Les 300 dernières actions.</p>
+        <div th:replace="~{fragments/historique :: liste(${historique}, true)}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

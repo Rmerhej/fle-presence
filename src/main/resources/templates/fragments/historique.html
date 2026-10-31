@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Liste chronologique de l'historique ; avecUnite = afficher le nom de l'unité -->
+<div th:fragment="liste(historique, avecUnite)" class="card">
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex gap-3 py-3" th:each="e : ${historique}">
+            <span class="kpi-icone" th:classappend="${e.action.couleur == 'danger'} ? 'fond-rouge'
+                    : (${e.action.couleur == 'warning'} ? 'fond-orange'
+                    : (${e.action.couleur == 'success'} ? 'fond-vert' : 'fond-bleu'))">
+                <i class="bi" th:classappend="${e.action.icone}"></i>
+            </span>
+            <div class="flex-grow-1 min-w-0">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <span class="fw-semibold" th:text="${e.action.libelle}">Séance annulée</span>
+                    <span class="small text-doux text-nowrap" th:text="${@fmt.dateHeure(e.dateAction)}">31/10/2026 à 9h12</span>
+                </div>
+                <div class="small" th:if="${e.details}" th:text="${e.details}">Débutants · mardi 4 novembre 14h00</div>
+                <div class="small text-doux">
+                    <i class="bi bi-person me-1"></i><span th:text="${e.auteur}">resp.chatou</span>
+                    <th:block th:if="${avecUnite and e.unite != null}">
+                        · <i class="bi bi-geo-alt me-1"></i><span th:text="${e.unite.nom}">Chatou</span>
+                    </th:block>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item text-center text-doux py-4" th:if="${#lists.isEmpty(historique)}">
+            Aucune action enregistrée pour le moment.
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

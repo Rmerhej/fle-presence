@@ -24,7 +24,9 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // Pages publiques : accueil, planning des unités (apprenants), ressources statiques
-                .requestMatchers("/", "/u/**", "/plan-du-site", "/confidentialite", "/login", "/error", "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/u/**", "/plan-du-site", "/confidentialite", "/login", "/error",
+                        "/css/**", "/js/**", "/img/**", "/icons/**", "/favicon.ico",
+                        "/manifest.json", "/sw.js", "/hors-ligne.html", "/push/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/responsable/**").hasRole("RESPONSABLE")
                 .requestMatchers("/saisie/**").hasAnyRole("BENEVOLE", "RESPONSABLE")
@@ -34,6 +36,8 @@ public class SecurityConfig {
                 .successHandler(redirectionParRole())
                 .failureUrl("/login?erreur")
                 .permitAll())
+            // Abonnement anonyme aux notifications (appel JavaScript, sans session ni formulaire)
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/push/**"))
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/?deconnecte")

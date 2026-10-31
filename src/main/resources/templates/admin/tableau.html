@@ -23,42 +23,62 @@
                     <option value="">Toutes les unités</option>
                     <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}" th:selected="${u.id == uniteId}"></option>
                 </select>
+                <a class="btn btn-light btn-sm" th:href="@{/admin/bilan(annee=${annee},uniteId=${uniteId})}">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Bilan annuel</a>
             </form>
         </div>
     </section>
 
     <div class="container">
 
-        <!-- Indicateurs de l'année -->
-        <div class="row g-3 mb-4">
+        <!-- Indicateurs de l'année, avec l'évolution par rapport à l'année précédente -->
+        <div class="row g-3 mb-2" th:with="c=${comparaison}">
             <div class="col-6 col-lg-3">
-                <div class="card kpi"><span class="kpi-icone fond-bleu"><i class="bi bi-calendar-check"></i></span>
-                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.seances()}">0</div><div class="kpi-libelle">Séances réalisées</div></div>
+                <div class="card kpi h-100"><span class="kpi-icone fond-bleu"><i class="bi bi-calendar-check"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${c.actuel().seances()}">0</div>
+                    <div class="kpi-libelle">Séances réalisées</div>
+                    <div class="small fw-semibold" th:classappend="${@fmt.couleurEvolution(c.evoSeances())}"
+                         th:text="${@fmt.evolution(c.evoSeances())}"></div></div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="card kpi"><span class="kpi-icone fond-orange"><i class="bi bi-person-badge"></i></span>
-                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.benevoles()}">0</div><div class="kpi-libelle">Présences bénévoles</div></div>
+                <div class="card kpi h-100"><span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${c.actuel().apprenants()}">0</div>
+                    <div class="kpi-libelle">Présences apprenants
+                        · <span th:text="${@fmt.decimal(c.actuel().moyenneApprenants())}"></span> / séance</div>
+                    <div class="small fw-semibold" th:classappend="${@fmt.couleurEvolution(c.evoApprenants())}"
+                         th:text="${@fmt.evolution(c.evoApprenants())}"></div></div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="card kpi"><span class="kpi-icone fond-vert"><i class="bi bi-people-fill"></i></span>
-                    <div class="kpi-valeur mt-2" th:text="${totauxAnnee.apprenants()}">0</div><div class="kpi-libelle">Présences apprenants</div></div>
+                <div class="card kpi h-100"><span class="kpi-icone fond-orange"><i class="bi bi-person-badge"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${c.actuel().benevoles()}">0</div>
+                    <div class="kpi-libelle">Présences bénévoles</div>
+                    <div class="small fw-semibold" th:classappend="${@fmt.couleurEvolution(c.evoBenevoles())}"
+                         th:text="${@fmt.evolution(c.evoBenevoles())}"></div></div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="card kpi"><span class="kpi-icone fond-rouge"><i class="bi bi-graph-up"></i></span>
-                    <div class="kpi-valeur mt-2" th:text="${@fmt.decimal(totauxAnnee.moyenneApprenants())}">0</div>
-                    <div class="kpi-libelle">Apprenants par séance (moyenne)</div></div>
+                <div class="card kpi h-100"><span class="kpi-icone fond-rouge"><i class="bi bi-hourglass-split"></i></span>
+                    <div class="kpi-valeur mt-2" th:text="${@fmt.heures(c.actuel().heuresBenevolat())}">0 h</div>
+                    <div class="kpi-libelle">Heures de bénévolat</div>
+                    <div class="small fw-semibold" th:classappend="${@fmt.couleurEvolution(c.evoHeuresBenevolat())}"
+                         th:text="${@fmt.evolution(c.evoHeuresBenevolat())}"></div></div>
             </div>
         </div>
+        <p class="small text-doux mb-4">
+            <i class="bi bi-info-circle me-1"></i>Évolutions <span th:text="${comparaison.libelle()}">par rapport à 2025</span>.
+            Heures de bénévolat = bénévoles présents × durée de chaque séance.
+        </p>
 
         <!-- Graphique mensuel -->
         <div class="card mb-4">
             <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                <span><i class="bi bi-bar-chart-line me-2 text-primary"></i>Apprenants présents par mois</span>
+                <span><i class="bi bi-bar-chart-line me-2 text-primary"></i>Par mois et par unité</span>
                 <div class="btn-group btn-group-sm ms-auto" role="group" aria-label="Indicateur">
                     <input type="radio" class="btn-check" name="indicateur" id="ind-apprenants" value="apprenants" checked>
                     <label class="btn btn-outline-primary" for="ind-apprenants">Apprenants</label>
                     <input type="radio" class="btn-check" name="indicateur" id="ind-benevoles" value="benevoles">
                     <label class="btn btn-outline-primary" for="ind-benevoles">Bénévoles</label>
+                    <input type="radio" class="btn-check" name="indicateur" id="ind-heures" value="heures">
+                    <label class="btn btn-outline-primary" for="ind-heures">Heures bénévolat</label>
                 </div>
             </div>
             <div class="card-body">
@@ -79,7 +99,7 @@
                         <table class="table table-sm table-hover mb-0">
                             <thead class="sticky-top"><tr class="small text-doux">
                                 <th>Mois</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénévoles</th>
-                                <th class="text-end">Apprenants</th><th class="text-end">Moy.</th></tr></thead>
+                                <th class="text-end">Apprenants</th><th class="text-end">Moy.</th><th class="text-end">H. bénévolat</th></tr></thead>
                             <tbody>
                             <tr th:each="l : ${parMois}">
                                 <td th:text="${l.periode()}"></td>
@@ -88,8 +108,9 @@
                                 <td class="text-end" th:text="${l.benevoles()}"></td>
                                 <td class="text-end fw-semibold" th:text="${l.apprenants()}"></td>
                                 <td class="text-end text-doux" th:text="${@fmt.decimal(l.moyenneApprenants())}"></td>
+                                <td class="text-end" th:text="${@fmt.heures(l.heuresBenevolat())}"></td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(parMois)}"><td colspan="6" class="text-center text-doux py-4">Aucune donnée pour cette année.</td></tr>
+                            <tr th:if="${#lists.isEmpty(parMois)}"><td colspan="7" class="text-center text-doux py-4">Aucune donnée pour cette année.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -107,7 +128,7 @@
                     <div class="table-responsive" style="max-height:420px">
                         <table class="table table-sm table-hover mb-0">
                             <thead class="sticky-top"><tr class="small text-doux">
-                                <th>Année</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénév.</th><th class="text-end">Appr.</th></tr></thead>
+                                <th>Année</th><th>Unité</th><th class="text-end">Séances</th><th class="text-end">Bénév.</th><th class="text-end">Appr.</th><th class="text-end">H. bén.</th></tr></thead>
                             <tbody>
                             <tr th:each="l : ${parAnnee}">
                                 <td th:text="${l.periode()}"></td>
@@ -115,8 +136,9 @@
                                 <td class="text-end" th:text="${l.seances()}"></td>
                                 <td class="text-end" th:text="${l.benevoles()}"></td>
                                 <td class="text-end fw-semibold" th:text="${l.apprenants()}"></td>
+                                <td class="text-end" th:text="${@fmt.heures(l.heuresBenevolat())}"></td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(parAnnee)}"><td colspan="5" class="text-center text-doux py-4">Aucune donnée.</td></tr>
+                            <tr th:if="${#lists.isEmpty(parAnnee)}"><td colspan="6" class="text-center text-doux py-4">Aucune donnée.</td></tr>
                             </tbody>
                         </table>
                     </div>

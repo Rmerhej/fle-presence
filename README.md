@@ -10,12 +10,13 @@ Bootstrap 5 + thème Bootswatch **Zephyr** · Google Fonts (Inter, Nunito) · Ch
 
 | Profil | Accès | Peut faire |
 |---|---|---|
-| **Apprenant** | Page publique `/u/{ville}`, **sans compte** (lien ou QR code) | Voir les prochains cours, alertes en toast si un cours est annulé ou déplacé |
+| **Apprenant** | Page publique `/u/{ville}`, **sans compte** (lien ou QR code) | Voir les prochains cours, alertes en toast, **abonnement à l'agenda du téléphone** (.ics), **appli installable** et **notifications** des annulations |
 | **Bénévole** | `/saisie` | Saisir *une fois* le nombre de bénévoles et d'apprenants présents à une séance de son unité |
-| **Responsable** (1 par unité) | `/responsable` | Groupes et horaires, annuler / déplacer une séance, **modifier les saisies**, comptes bénévoles, affiche QR code |
-| **Administrateur** | `/admin` | Tableau de bord par date, par mois et par année (graphique + export CSV), unités, comptes |
+| **Responsable** (1 par unité) | `/responsable` | Groupes et horaires, annuler / déplacer une séance, **annuler une période** (vacances), **modifier les saisies**, comptes bénévoles, **historique**, affiche QR code |
+| **Administrateur** | `/admin` | Tableau de bord par date, mois et année, **heures de bénévolat**, **comparaison avec l'année précédente**, **bilan annuel imprimable (PDF)**, export CSV, historique, unités, comptes |
 
 Aucune donnée personnelle des apprenants n'est enregistrée : uniquement des **nombres** de présents.
+Mode clair / sombre, pied de page configurable, plan du site et page confidentialité.
 
 ## Essayer tout de suite (sans MySQL)
 
@@ -69,7 +70,14 @@ docker compose up -d --build
 La base MySQL n'est pas exposée sur la machine ; ses données sont dans le volume `fle-presence_db-data`.
 Si l'application tourne déjà dans IntelliJ, changez `APP_PORT` dans `.env` pour éviter le conflit sur 8080.
 
-Publier l'image sur Docker Hub :
+Les sauvegardes automatiques de la base arrivent chaque nuit dans `./sauvegardes` (14 conservées).
+
+**Mettre en ligne avec HTTPS** (serveur, nom de domaine, Caddy) : voir le guide [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md).
+
+**GitHub Actions** (`.github/workflows/ci.yml`) : tests à chaque `git push`, puis publication de l'image sur
+Docker Hub si les secrets `DOCKERHUB_USERNAME` et `DOCKERHUB_TOKEN` sont définis dans le dépôt.
+
+Publier l'image sur Docker Hub à la main :
 
 ```bash
 docker compose build app
@@ -118,6 +126,4 @@ mvn test
 ## Pistes pour la suite
 
 - Déclaration d'accessibilité (RGAA) pour la page publique.
-- Rendre la page publique installable (PWA) avec notifications push pour les annulations de dernière minute.
-- Traduire la page publique (anglais, arabe, ukrainien…) avec les fichiers `messages_xx.properties`.
-- Vacances scolaires : annulation groupée sur une période.
+- Connexion des bénévoles par lien magique ou code, sans mot de passe.

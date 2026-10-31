@@ -29,10 +29,13 @@ public class PresenceService {
 
     private final PresenceRepository presenceRepository;
     private final SeanceRepository seanceRepository;
+    private final JournalService journal;
 
-    public PresenceService(PresenceRepository presenceRepository, SeanceRepository seanceRepository) {
+    public PresenceService(PresenceRepository presenceRepository, SeanceRepository seanceRepository,
+                           JournalService journal) {
         this.presenceRepository = presenceRepository;
         this.seanceRepository = seanceRepository;
+        this.journal = journal;
     }
 
     @Transactional(readOnly = true)
@@ -78,8 +81,10 @@ public class PresenceService {
 
         Optional<Presence> existante = presenceRepository.findBySeance(seance);
         Presence p;
+        String avant = null;
         if (existante.isPresent()) {
             p = existante.get();
+            avant = p.getNbBenevoles() + " bénévole(s), " + p.getNbApprenants() + " apprenant(s)";
             p.setModifiePar(utilisateur.getUsername());
             p.setModifieLe(LocalDateTime.now());
         } else {
@@ -92,7 +97,16 @@ public class PresenceService {
         p.setNbApprenants(nbApprenants);
         p.setCommentaire(commentaire == null || commentaire.isBlank() ? null
                 : commentaire.strip().substring(0, Math.min(500, commentaire.strip().length())));
-        return presenceRepository.save(p);
+        p = presenceRepository.save(p);
+        String apres = nbBenevoles + " bénévole(s), " + nbApprenants + " apprenant(s)";
+        if (avant == null) {
+            journal.noter(seance.getGroupe().getUnite(), TypeAction.PRESENCE_SAISIE,
+                    SeanceService.decrire(seance) + " · " + apres);
+        } else {
+            journal.noter(seance.getGroupe().getUnite(), TypeAction.PRESENCE_MODIFIEE,
+                    SeanceService.decrire(seance) + " · " + avant + " → " + apres);
+        }
+        return p;
     }
 
     private void verifierDroits(Seance seance, Utilisateur utilisateur) {
