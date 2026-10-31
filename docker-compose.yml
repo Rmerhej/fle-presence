@@ -18,6 +18,8 @@ services:
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     volumes:
       - db-data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:${DB_PORT:-3310}:3306"
     # La base n'est pas exposée sur la machine : seuls l'app et phpMyAdmin y accèdent.
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
