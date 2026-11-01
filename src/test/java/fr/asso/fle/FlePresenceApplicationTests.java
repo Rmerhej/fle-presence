@@ -20,7 +20,9 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Tests de bout en bout avec la base H2 et les données de démonstration (profil dev). */
@@ -154,5 +156,18 @@ class FlePresenceApplicationTests {
         assertThat(r.annulees()).isGreaterThan(0);
         assertThat(seanceRepository.findParUniteEntre(chatou, debut, fin))
                 .allMatch(s -> s.getStatut() != StatutSeance.PREVUE);
+    }
+
+    @Test
+    void connexionBloqueeApresCinqEchecs() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/login").with(csrf()).with(r -> { r.setRemoteAddr("10.9.9.9"); return r; })
+                    .param("username", "benevole.chatou").param("password", "mauvais"))
+                    .andExpect(status().is3xxRedirection());
+        }
+        // Même avec le bon mot de passe, la connexion reste bloquée pendant 15 minutes.
+        mvc.perform(post("/login").with(csrf()).with(r -> { r.setRemoteAddr("10.9.9.9"); return r; })
+                .param("username", "benevole.chatou").param("password", "benevole1"))
+                .andExpect(redirectedUrl("/login?bloque"));
     }
 }

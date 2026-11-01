@@ -13,11 +13,18 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final ProtectionConnexion protectionConnexion;
+
+    public SecurityConfig(ProtectionConnexion protectionConnexion) {
+        this.protectionConnexion = protectionConnexion;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,7 +41,7 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler(redirectionParRole())
-                .failureUrl("/login?erreur")
+                .failureHandler(echecConnexion())
                 .permitAll())
             // Abonnement anonyme aux notifications (appel JavaScript, sans session ni formulaire)
             .csrf(csrf -> csrf.ignoringRequestMatchers("/push/**"))
@@ -48,6 +55,7 @@ public class SecurityConfig {
     /** Après connexion, chacun arrive directement sur son espace. */
     private AuthenticationSuccessHandler redirectionParRole() {
         return (request, response, authentication) -> {
+            protectionConnexion.succes(request.getRemoteAddr(), authentication.getName());
             String cible = "/";
             for (GrantedAuthority a : authentication.getAuthorities()) {
                 switch (a.getAuthority()) {
@@ -58,6 +66,17 @@ public class SecurityConfig {
                 }
             }
             response.sendRedirect(request.getContextPath() + cible);
+        };
+    }
+
+    /** Chaque échec est compté : trop d'échecs bloquent temporairement l'IP et l'identifiant. */
+    private AuthenticationFailureHandler echecConnexion() {
+        return (request, response, exception) -> {
+            String ip = request.getRemoteAddr();
+            String identifiant = request.getParameter("username");
+            protectionConnexion.echec(ip, identifiant);
+            boolean bloque = protectionConnexion.estBloque(ip, identifiant);
+            response.sendRedirect(request.getContextPath() + (bloque ? "/login?bloque" : "/login?erreur"));
         };
     }
 

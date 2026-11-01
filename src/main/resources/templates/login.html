@@ -19,6 +19,10 @@
                         <i class="bi bi-exclamation-triangle me-1"></i>Identifiant ou mot de passe incorrect, ou compte désactivé.
                     </div>
                     <div class="alert alert-info small" th:if="${param.logout}">Vous êtes déconnecté.</div>
+                    <div class="alert alert-warning small" th:if="${param.bloque}">
+                        <i class="bi bi-shield-lock me-1"></i>Trop de tentatives de connexion.
+                        Patientez 15 minutes, puis réessayez. En cas d'oubli, demandez un nouveau mot de passe à votre responsable.
+                    </div>
 
                     <form th:action="@{/login}" method="post">
                         <div class="mb-3">
