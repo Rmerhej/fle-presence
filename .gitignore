@@ -16,3 +16,8 @@ Thumbs.db
 
 # Sauvegardes de la base
 sauvegardes/
+
+# Exports de base et fichiers d'environnement
+*.sql
+.env*
+!.env.example
