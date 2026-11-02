@@ -3,6 +3,58 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
+<!-- ============================================================ INSTALLER L'APPLI -->
+<!-- Menu « Installer l'appli » : Android, iPhone, ordinateur. Masqué quand l'appli est déjà installée. -->
+<div th:fragment="installer" class="d-print-none" id="installer-appli">
+    <div class="dropdown">
+        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-download me-1"></i>Installer l'appli
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" type="button" data-installer-sur="android"><i class="bi bi-android2 me-2"></i>Android</button></li>
+            <li><button class="dropdown-item" type="button" data-installer-sur="iphone"><i class="bi bi-apple me-2"></i>iPhone, iPad</button></li>
+            <li><button class="dropdown-item" type="button" data-installer-sur="ordinateur"><i class="bi bi-laptop me-2"></i>Ordinateur</button></li>
+        </ul>
+    </div>
+
+    <div class="modal fade" id="modal-installer" tabindex="-1" aria-labelledby="titre-installer" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="titre-installer"><i class="bi bi-download me-2"></i>Installer l'appli</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div data-aide="android">
+                        <p class="fw-semibold mb-2"><i class="bi bi-android2 me-1"></i>Sur Android, avec Chrome</p>
+                        <ol class="mb-0">
+                            <li>Touchez le menu <strong>⋮</strong> en haut à droite.</li>
+                            <li>Touchez <strong>Installer l'application</strong> ou <strong>Ajouter à l'écran d'accueil</strong>.</li>
+                            <li>Confirmez : l'icône apparaît sur l'écran d'accueil.</li>
+                        </ol>
+                    </div>
+                    <div data-aide="iphone">
+                        <p class="fw-semibold mb-2"><i class="bi bi-apple me-1"></i>Sur iPhone ou iPad, avec Safari</p>
+                        <ol class="mb-0">
+                            <li>Touchez <strong>Partager</strong> <i class="bi bi-box-arrow-up"></i> (le carré avec une flèche).</li>
+                            <li>Touchez <strong>Sur l'écran d'accueil</strong> (faites défiler si besoin).</li>
+                            <li>Touchez <strong>Ajouter</strong> : l'icône apparaît sur l'écran d'accueil.</li>
+                        </ol>
+                    </div>
+                    <div data-aide="ordinateur">
+                        <p class="fw-semibold mb-2"><i class="bi bi-laptop me-1"></i>Sur ordinateur, avec Chrome ou Edge</p>
+                        <ol class="mb-0">
+                            <li>Cliquez sur l'icône d'installation <i class="bi bi-display"></i> à droite de la barre d'adresse,
+                                ou ouvrez le menu <strong>⋮</strong> / <strong>…</strong>.</li>
+                            <li>Choisissez <strong>Installer FLE Présence</strong> (ou <strong>Applications → Installer</strong>).</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ============================================================ HEAD -->
 <head th:fragment="head(titre)">
     <meta charset="UTF-8">
@@ -190,7 +242,8 @@
         <hr class="my-4" style="border-color:var(--fle-bord);opacity:1">
 
         <div class="d-flex flex-wrap justify-content-between gap-2 small text-doux">
-            <span>© <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}">2026</span> FLE Présence
+            <span>© <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}">2026</span> FLE Présence — Tous droits réservés
+                · Développé par Roland Merhej
                 · <i class="bi bi-lock me-1"></i>Aucune donnée personnelle des apprenants n'est enregistrée.</span>
             <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
                 <i class="bi bi-arrow-up-circle me-1"></i>Haut de page</a>

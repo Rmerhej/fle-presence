@@ -49,7 +49,8 @@ class FlePresenceApplicationTests {
     @Test
     void pagesPubliquesDuPiedDePage() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("secours-catholique.org")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("secours-catholique.org")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("modal-installer")));
         mvc.perform(get("/plan-du-site")).andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Cours à Chatou")));
         mvc.perform(get("/confidentialite")).andExpect(status().isOk());

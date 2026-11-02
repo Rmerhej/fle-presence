@@ -7,9 +7,12 @@
 
 <main>
     <section class="entete">
-        <div class="container">
-            <h1 class="display-6 mb-2">Cours de français</h1>
-            <p class="lead text-doux mb-0">Choisissez votre ville pour voir les dates des cours.</p>
+        <div class="container d-flex flex-wrap align-items-end justify-content-between gap-3">
+            <div>
+                <h1 class="display-6 mb-2">Cours de français</h1>
+                <p class="lead text-doux mb-0">Choisissez votre ville pour voir les dates des cours.</p>
+            </div>
+            <div th:replace="~{fragments/layout :: installer}"></div>
         </div>
     </section>
 

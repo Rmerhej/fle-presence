@@ -81,12 +81,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const installee = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
     // ------------------------------------------------ installation
+    // Menu « Installer l'appli » : Android et ordinateur lancent l'installation quand le navigateur
+    // le permet ; sinon (et toujours sur iPhone) une fenêtre explique les gestes à faire.
     let invitation = null;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         invitation = e;
-        const b = document.getElementById('bouton-installer');
-        if (b) b.classList.remove('d-none');
+    });
+
+    const masquerInstaller = () => {
+        const bloc = document.getElementById('installer-appli');
+        if (bloc) bloc.classList.add('d-none');
+    };
+    window.addEventListener('appinstalled', masquerInstaller);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (installee) { masquerInstaller(); return; }
+        const fenetre = document.getElementById('modal-installer');
+        // La fenêtre est rattachée au <body> pour toujours s'afficher au premier plan.
+        if (fenetre) document.body.appendChild(fenetre);
+        document.querySelectorAll('[data-installer-sur]').forEach((item) => {
+            item.addEventListener('click', async () => {
+                const appareil = item.dataset.installerSur;
+                if (invitation && appareil !== 'iphone') {
+                    invitation.prompt();
+                    const choix = await invitation.userChoice;
+                    invitation = null;
+                    if (choix && choix.outcome === 'accepted') masquerInstaller();
+                    return;
+                }
+                if (!fenetre) return;
+                fenetre.querySelectorAll('[data-aide]').forEach((bloc) => {
+                    bloc.classList.toggle('d-none', bloc.dataset.aide !== appareil);
+                });
+                bootstrap.Modal.getOrCreateInstance(fenetre).show();
+            });
+        });
     });
 
     const toast = (texte, couleur = 'success') => {
@@ -122,16 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const boutonInstaller = document.getElementById('bouton-installer');
-        if (boutonInstaller) {
-            boutonInstaller.addEventListener('click', async () => {
-                if (!invitation) return;
-                invitation.prompt();
-                await invitation.userChoice;
-                invitation = null;
-                boutonInstaller.classList.add('d-none');
-            });
-        }
 
         // ------------------------------------------------ notifications
         const bouton = document.getElementById('bouton-notifications');

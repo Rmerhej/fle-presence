@@ -80,9 +80,7 @@
                         <li><a class="dropdown-item" th:href="${lienIcs}" download><i class="bi bi-download me-2"></i>Télécharger (.ics)</a></li>
                     </ul>
                 </div>
-                <button type="button" class="btn btn-outline-primary d-none" id="bouton-installer">
-                    <i class="bi bi-download me-1"></i>Installer l'appli
-                </button>
+                <div th:replace="~{fragments/layout :: installer}"></div>
                 <button type="button" class="btn btn-outline-primary d-none" id="bouton-notifications"
                         th:attr="data-unite=${unite.slug},data-groupe=${groupeChoisi}">
                     <i class="bi bi-bell me-1"></i><span>Me prévenir</span>
