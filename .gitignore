@@ -21,3 +21,8 @@ sauvegardes/
 *.sql
 .env*
 !.env.example
+
+# Exports de base et fichiers d'environnement
+*.sql
+.env*
+!.env.example
