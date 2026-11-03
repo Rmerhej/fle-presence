@@ -26,3 +26,6 @@ sauvegardes/
 *.sql
 .env*
 !.env.example
+
+# ...sauf les migrations de la base, qui font partie du code
+!src/main/resources/db/migration/*.sql
