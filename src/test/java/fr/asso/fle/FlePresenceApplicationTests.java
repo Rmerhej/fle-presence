@@ -111,6 +111,19 @@ class FlePresenceApplicationTests {
     }
 
     @Test
+    @WithUserDetails("admin")
+    void compteurDesInstallations() throws Exception {
+        mvc.perform(post("/push/installation").contentType("application/json")
+                        .content("{\"unite\":\"chatou\",\"plateforme\":\"android\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/push/installation").contentType("application/json")
+                        .content("{\"plateforme\":\"inconnue\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/admin")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Installations de l")));
+    }
+
+    @Test
     @Transactional
     void unBenevoleSaisitUneFoisEtSeulLeResponsableModifie() {
         UniteLocale chatou = uniteRepository.findBySlugAndActiveTrue("chatou").orElseThrow();

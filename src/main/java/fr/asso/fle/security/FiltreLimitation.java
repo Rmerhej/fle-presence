@@ -73,6 +73,11 @@ public class FiltreLimitation extends OncePerRequestFilter {
         }
 
         // 2. Abonnements aux alertes (adresse publique qui écrit en base)
+        if (post && uri.equals("/push/installation")
+                && !limiteur.autoriser("installation:" + ip, abonnementsParHeure, Duration.ofHours(1))) {
+            refuser(request, response, "Trop de demandes. Réessayez plus tard.");
+            return;
+        }
         if (post && uri.equals("/push/abonnement")
                 && !limiteur.autoriser("push:" + ip, abonnementsParHeure, Duration.ofHours(1))) {
             refuser(request, response, "Trop de demandes d'abonnement. Réessayez plus tard.");

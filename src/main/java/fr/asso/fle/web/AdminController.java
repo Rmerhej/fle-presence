@@ -29,15 +29,18 @@ public class AdminController {
     private final AdministrationService administrationService;
     private final UtilisateurCourant utilisateurCourant;
     private final fr.asso.fle.service.JournalService journalService;
+    private final fr.asso.fle.service.InstallationService installationService;
 
     public AdminController(StatsService statsService,
                            AdministrationService administrationService,
                            UtilisateurCourant utilisateurCourant,
-                           fr.asso.fle.service.JournalService journalService) {
+                           fr.asso.fle.service.JournalService journalService,
+                           fr.asso.fle.service.InstallationService installationService) {
         this.statsService = statsService;
         this.administrationService = administrationService;
         this.utilisateurCourant = utilisateurCourant;
         this.journalService = journalService;
+        this.installationService = installationService;
     }
 
     /** Historique de toutes les unités (ou d'une seule). */
@@ -84,6 +87,7 @@ public class AdminController {
         model.addAttribute("totauxPeriode", statsService.totaux(parJour));
         model.addAttribute("parAnnee", statsService.parAnnee(uniteId));
         model.addAttribute("graphique", statsService.graphiqueMensuel(an, uniteId));
+        model.addAttribute("installations", installationService.compteur());
         return "admin/tableau";
     }
 

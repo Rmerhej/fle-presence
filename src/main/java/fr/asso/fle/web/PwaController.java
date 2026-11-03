@@ -2,6 +2,7 @@ package fr.asso.fle.web;
 
 import fr.asso.fle.model.UniteLocale;
 import fr.asso.fle.repository.UniteLocaleRepository;
+import fr.asso.fle.service.InstallationService;
 import fr.asso.fle.service.NotificationService;
 import fr.asso.fle.service.RegleMetierException;
 import org.springframework.http.HttpStatus;
@@ -25,10 +26,13 @@ public class PwaController {
 
     private final UniteLocaleRepository uniteRepository;
     private final NotificationService notificationService;
+    private final InstallationService installationService;
 
-    public PwaController(UniteLocaleRepository uniteRepository, NotificationService notificationService) {
+    public PwaController(UniteLocaleRepository uniteRepository, NotificationService notificationService,
+                         InstallationService installationService) {
         this.uniteRepository = uniteRepository;
         this.notificationService = notificationService;
+        this.installationService = installationService;
     }
 
     // ================================================================ manifestes
@@ -99,6 +103,16 @@ public class PwaController {
         } catch (RegleMetierException e) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "message", e.getMessage()));
         }
+    }
+
+    /** Corps envoyé une seule fois par appareil, à l'installation : { unite, plateforme } */
+    public record DemandeInstallation(String unite, String plateforme) {
+    }
+
+    @PostMapping("/push/installation")
+    public Map<String, Object> installation(@RequestBody DemandeInstallation d) {
+        installationService.enregistrer(d.unite(), d.plateforme());
+        return Map.of("ok", true);
     }
 
     @PostMapping("/push/desabonnement")

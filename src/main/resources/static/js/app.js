@@ -93,7 +93,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const bloc = document.getElementById('installer-appli');
         if (bloc) bloc.classList.add('d-none');
     };
-    window.addEventListener('appinstalled', masquerInstaller);
+    window.addEventListener('appinstalled', () => {
+        masquerInstaller();
+        compterInstallation();
+    });
+
+    // Compteur anonyme des installations : un seul envoi par appareil (mémorisé dans le navigateur),
+    // à l'installation (Android, ordinateur) ou à la première ouverture de l'appli installée (iPhone compris).
+    function compterInstallation() {
+        const CLE = 'fle-installation-comptee';
+        try {
+            if (localStorage.getItem(CLE) === '1') return;
+            localStorage.setItem(CLE, '1');
+        } catch (e) {
+            return; // sans mémoire, on risquerait de compter plusieurs fois
+        }
+        const plateforme = estIOS ? 'iphone' : (/android/i.test(navigator.userAgent) ? 'android' : 'ordinateur');
+        const notif = document.getElementById('bouton-notifications');
+        const unite = notif ? notif.dataset.unite : null;
+        fetch('/push/installation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unite, plateforme })
+        }).catch(() => { });
+    }
+    if (installee) {
+        document.addEventListener('DOMContentLoaded', compterInstallation);
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         if (installee) { masquerInstaller(); return; }
