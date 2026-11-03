@@ -2,7 +2,8 @@
    - rend l'application installable et utilisable hors connexion (dernière version vue)
    - affiche les notifications d'annulation / de report */
 
-const VERSION = 'fle-v1';
+// Changer ce numéro force les téléphones à vider l'ancien cache.
+const VERSION = 'fle-v2';
 const A_PRECHARGER = ['/hors-ligne.html', '/css/app.css', '/js/app.js', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
@@ -42,8 +43,25 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Styles, scripts, icônes : le cache d'abord.
-    if (/^\/(css|js|icons)\//.test(url.pathname)) {
+    // Styles et scripts : le réseau d'abord, pour que chaque mise à jour de l'application
+    // arrive tout de suite ; la copie enregistrée sert seulement hors connexion.
+    if (/^\/(css|js)\//.test(url.pathname)) {
+        e.respondWith(
+            fetch(req)
+                .then((rep) => {
+                    if (rep.ok) {
+                        const copie = rep.clone();
+                        caches.open(VERSION).then((c) => c.put(req, copie));
+                    }
+                    return rep;
+                })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    // Icônes (elles ne changent pas) : le cache d'abord.
+    if (url.pathname.startsWith('/icons/')) {
         e.respondWith(
             caches.match(req).then((r) => r || fetch(req).then((rep) => {
                 const copie = rep.clone();
