@@ -64,6 +64,8 @@
     <!-- Application installable (PWA) -->
     <link rel="manifest" th:if="${manifestUrl != null}" th:href="${manifestUrl}">
     <link rel="manifest" th:unless="${manifestUrl != null}" th:href="@{/manifest.json}">
+    <link rel="icon" th:href="@{/favicon.ico}" sizes="48x48">
+    <link rel="icon" type="image/svg+xml" th:href="@{/icons/favicon.svg}">
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/icons/favicon-32.png}">
     <link rel="apple-touch-icon" th:href="@{/icons/apple-touch-icon.png}">
     <meta name="apple-mobile-web-app-capable" content="yes">

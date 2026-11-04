@@ -3,7 +3,7 @@
    - affiche les notifications d'annulation / de report */
 
 // Changer ce numéro force les téléphones à vider l'ancien cache.
-const VERSION = 'fle-v2';
+const VERSION = 'fle-v3';
 const A_PRECHARGER = ['/hors-ligne.html', '/css/app.css', '/js/app.js', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
