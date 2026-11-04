@@ -116,8 +116,12 @@
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center">
                         <i class="bi bi-calendar3 me-2 text-primary"></i>Par mois — <span class="ms-1" th:text="${annee}"></span>
-                        <a class="btn btn-outline-secondary btn-sm ms-auto"
-                           th:href="@{/admin/export.csv(type='mois',annee=${annee},uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                        <div class="ms-auto d-flex gap-2">
+                            <a class="btn btn-outline-success btn-sm" title="Télécharger pour Excel"
+                               th:href="@{/admin/export.xlsx(type='mois',annee=${annee},uniteId=${uniteId})}"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+                            <a class="btn btn-outline-danger btn-sm" title="Bilan annuel à imprimer ou enregistrer en PDF"
+                               th:href="@{/admin/bilan(annee=${annee},uniteId=${uniteId})}"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+                        </div>
                     </div>
                     <div class="table-responsive" style="max-height:420px">
                         <table class="table table-sm table-hover mb-0">
@@ -146,8 +150,12 @@
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center">
                         <i class="bi bi-calendar-range me-2 text-primary"></i>Par année
-                        <a class="btn btn-outline-secondary btn-sm ms-auto"
-                           th:href="@{/admin/export.csv(type='annee',uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                        <div class="ms-auto d-flex gap-2">
+                            <a class="btn btn-outline-success btn-sm" title="Télécharger pour Excel"
+                               th:href="@{/admin/export.xlsx(type='annee',uniteId=${uniteId})}"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+                            <a class="btn btn-outline-danger btn-sm" title="Bilan annuel à imprimer ou enregistrer en PDF"
+                               th:href="@{/admin/bilan(annee=${annee},uniteId=${uniteId})}"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+                        </div>
                     </div>
                     <div class="table-responsive" style="max-height:420px">
                         <table class="table table-sm table-hover mb-0">
@@ -182,8 +190,8 @@
                             <label class="small text-doux" for="au">au</label>
                             <input type="date" id="au" name="au" class="form-control form-control-sm" style="width:auto" th:value="${au}">
                             <button class="btn btn-primary btn-sm" type="submit">Afficher</button>
-                            <a class="btn btn-outline-secondary btn-sm ms-auto"
-                               th:href="@{/admin/export.csv(type='jour',du=${du},au=${au},uniteId=${uniteId})}"><i class="bi bi-download me-1"></i>CSV</a>
+                            <a class="btn btn-outline-success btn-sm ms-auto" title="Télécharger pour Excel"
+                               th:href="@{/admin/export.xlsx(type='jour',du=${du},au=${au},uniteId=${uniteId})}"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
                         </form>
                     </div>
                     <div class="table-responsive" style="max-height:480px">

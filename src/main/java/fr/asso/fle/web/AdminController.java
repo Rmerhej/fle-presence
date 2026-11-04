@@ -15,10 +15,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 /** Espace administrateur : tableau de bord, unités locales, comptes. */
 @Controller
@@ -91,8 +90,8 @@ public class AdminController {
         return "admin/tableau";
     }
 
-    /** Export CSV (séparateur « ; » pour Excel en français). type = jour | mois | annee */
-    @GetMapping("/export.csv")
+    /** Export Excel (.xlsx) : type = jour | mois | annee */
+    @GetMapping("/export.xlsx")
     public ResponseEntity<byte[]> export(@RequestParam(defaultValue = "mois") String type,
                                          @RequestParam(required = false) Integer annee,
                                          @RequestParam(required = false) Long uniteId,
@@ -100,31 +99,62 @@ public class AdminController {
                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au) {
         LocalDate aujourdHui = LocalDate.now();
         int an = annee != null ? annee : aujourdHui.getYear();
-        List<LigneStat> lignes = switch (type) {
-            case "jour" -> statsService.parJour(du != null ? du : aujourdHui.withDayOfMonth(1),
-                    au != null ? au : aujourdHui, uniteId);
-            case "annee" -> statsService.parAnnee(uniteId);
-            default -> statsService.parMois(an, uniteId);
-        };
+        LocalDate debut = du != null ? du : aujourdHui.withDayOfMonth(1);
+        LocalDate fin = au != null ? au : aujourdHui;
+        DateTimeFormatter jj = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        StringBuilder csv = new StringBuilder("﻿"); // BOM : accents corrects dans Excel
-        csv.append("Période;Unité;Séances;Bénévoles présents;Apprenants présents;Moyenne apprenants/séance;"
-                + "Heures de bénévolat;Heures de cours suivies\n");
-        for (LigneStat l : lignes) {
-            csv.append(l.periode()).append(';')
-               .append(l.unite().replace(";", ",")).append(';')
-               .append(l.seances()).append(';')
-               .append(l.benevoles()).append(';')
-               .append(l.apprenants()).append(';')
-               .append(String.format(Locale.FRANCE, "%.1f", l.moyenneApprenants())).append(';')
-               .append(String.format(Locale.FRANCE, "%.1f", l.heuresBenevolat())).append(';')
-               .append(String.format(Locale.FRANCE, "%.1f", l.heuresApprenants())).append('\n');
+        List<LigneStat> lignes;
+        String titre, onglet, nom;
+        switch (type) {
+            case "jour" -> {
+                lignes = statsService.parJour(debut, fin, uniteId);
+                titre = "Présences du " + debut.format(jj) + " au " + fin.format(jj);
+                onglet = "Par date";
+                nom = "presences-" + debut + "-au-" + fin;
+            }
+            case "annee" -> {
+                lignes = statsService.parAnnee(uniteId);
+                titre = "Présences par année";
+                onglet = "Par année";
+                nom = "presences-par-annee";
+            }
+            default -> {
+                lignes = statsService.parMois(an, uniteId);
+                titre = "Présences par mois — " + an;
+                onglet = "Par mois " + an;
+                nom = "presences-par-mois-" + an;
+            }
         }
-        String nom = "presences-" + type + "-" + aujourdHui + ".csv";
+        String perimetre = uniteId == null ? "Toutes les unités locales"
+                : administrationService.toutesLesUnites().stream()
+                    .filter(u -> u.getId().equals(uniteId)).map(u -> "Unité de " + u.getNom())
+                    .findFirst().orElse("");
+
+        List<ClasseurExcel.Colonne> colonnes = List.of(
+                new ClasseurExcel.Colonne("Période", ClasseurExcel.Format.TEXTE, 16),
+                new ClasseurExcel.Colonne("Unité", ClasseurExcel.Format.TEXTE, 20),
+                new ClasseurExcel.Colonne("Séances", ClasseurExcel.Format.ENTIER, 10),
+                new ClasseurExcel.Colonne("Bénévoles présents", ClasseurExcel.Format.ENTIER, 12),
+                new ClasseurExcel.Colonne("Apprenants présents", ClasseurExcel.Format.ENTIER, 12),
+                new ClasseurExcel.Colonne("Moyenne apprenants / séance", ClasseurExcel.Format.DECIMAL, 14),
+                new ClasseurExcel.Colonne("Heures de bénévolat", ClasseurExcel.Format.DECIMAL, 12),
+                new ClasseurExcel.Colonne("Heures de cours suivies", ClasseurExcel.Format.DECIMAL, 12));
+        List<List<Object>> valeurs = new java.util.ArrayList<>();
+        for (LigneStat l : lignes) {
+            valeurs.add(List.<Object>of(l.periode(), l.unite(), l.seances(), l.benevoles(), l.apprenants(),
+                    l.moyenneApprenants(), l.heuresBenevolat(), l.heuresApprenants()));
+        }
+        StatsService.Totaux t = statsService.totaux(lignes);
+        List<Object> total = List.<Object>of("Total", "", t.seances(), t.benevoles(), t.apprenants(),
+                t.moyenneApprenants(), t.heuresBenevolat(), t.heuresApprenants());
+
+        byte[] fichier = ClasseurExcel.creer(onglet, titre,
+                perimetre + " · généré le " + aujourdHui.format(jj), colonnes, valeurs, total);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nom + "\"")
-                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nom + ".xlsx\"")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(fichier);
     }
 
     /** Bilan d'activité annuel, mis en page pour l'impression (« Enregistrer en PDF »). */

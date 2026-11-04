@@ -102,7 +102,11 @@ class FlePresenceApplicationTests {
     @WithUserDetails("admin")
     void tableauDeBordAdmin() throws Exception {
         mvc.perform(get("/admin")).andExpect(status().isOk());
-        mvc.perform(get("/admin/export.csv").param("type", "mois")).andExpect(status().isOk());
+        for (String type : new String[]{"mois", "annee", "jour"}) {
+            mvc.perform(get("/admin/export.xlsx").param("type", type)).andExpect(status().isOk())
+                    .andExpect(content().contentType(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        }
         mvc.perform(get("/admin/unites")).andExpect(status().isOk());
         mvc.perform(get("/admin/utilisateurs")).andExpect(status().isOk());
         mvc.perform(get("/admin/bilan")).andExpect(status().isOk())

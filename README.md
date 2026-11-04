@@ -13,7 +13,7 @@ Bootstrap 5 + thème Bootswatch **Zephyr** · Google Fonts (Inter, Nunito) · Ch
 | **Apprenant** | Page publique `/u/{ville}`, **sans compte** (lien ou QR code) | Voir les prochains cours, alertes en toast, **abonnement à l'agenda du téléphone** (.ics), **appli installable** et **notifications** des annulations |
 | **Bénévole** | `/saisie` | Saisir *une fois* le nombre de bénévoles et d'apprenants présents à une séance de son unité |
 | **Responsable** (1 par unité) | `/responsable` | Groupes et horaires, annuler / déplacer une séance, **annuler une période** (vacances), **modifier les saisies**, comptes bénévoles, **historique**, affiche QR code |
-| **Administrateur** | `/admin` | Tableau de bord par date, mois et année, **heures de bénévolat**, **comparaison avec l'année précédente**, **bilan annuel imprimable (PDF)**, export CSV, historique, unités, comptes |
+| **Administrateur** | `/admin` | Tableau de bord par date, mois et année, **heures de bénévolat**, **comparaison avec l'année précédente**, **bilan annuel imprimable (PDF)**, export Excel, historique, unités, comptes |
 
 Aucune donnée personnelle des apprenants n'est enregistrée : uniquement des **nombres** de présents.
 Mode clair / sombre, pied de page configurable, plan du site et page confidentialité.
@@ -40,7 +40,7 @@ Page publique d'exemple : http://localhost:8080/u/chatou (avec un cours annulé 
 
 ## Lancer avec MySQL (développement)
 
-Avec un MySQL 8 sur le port 3307, par exemple le conteneur `fle-mysql` :
+Avec un MySQL 8 sur le port 3310, par exemple le conteneur `fle-mysql` :
 
 ```bash
 mvn spring-boot:run
@@ -50,7 +50,7 @@ Paramètres (variables d'environnement) :
 
 | Variable | Défaut |
 |---|---|
-| `DB_URL` | `jdbc:mysql://localhost:3307/fle_presence?...` |
+| `DB_URL` | `jdbc:mysql://127.0.0.1:3310/fle_presence?...` |
 | `DB_USER` / `DB_PASSWORD` | `fle` / `fle` |
 | `APP_ADMIN_USERNAME` | `admin` |
 | `APP_ADMIN_PASSWORD` | *(vide : un mot de passe aléatoire est affiché une fois dans les logs au premier démarrage)* |
