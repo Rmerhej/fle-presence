@@ -143,6 +143,19 @@ footer.surface {
 }
 .entete .text-doux { color: rgba(255, 255, 255, .82) !important; }
 .entete a.btn-light, .entete .btn-light { color: #3459e6; background: #fff; border-color: #fff; }
+/* Boutons « contour » sur le bandeau bleu (ex. « Installer l'appli » de l'accueil) : blancs, lisibles
+   en mode clair comme en mode sombre */
+.entete .btn-outline-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: rgba(255, 255, 255, .8);
+    --bs-btn-hover-color: #3459e6;
+    --bs-btn-hover-bg: #fff;
+    --bs-btn-hover-border-color: #fff;
+    --bs-btn-active-color: #3459e6;
+    --bs-btn-active-bg: #fff;
+    --bs-btn-active-border-color: #fff;
+    --bs-btn-bg: rgba(255, 255, 255, .12);
+}
 
 /* --------------------------------------------------------------- indicateurs */
 .kpi { padding: 1.25rem 1.25rem 1rem; }
