@@ -28,6 +28,20 @@ public class ModeleGlobal {
         return liens;
     }
 
+    /** Adresse du site (https://…), pour les aperçus de partage. */
+    @ModelAttribute("urlSite")
+    public String urlSite() {
+        return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                .fromCurrentContextPath().toUriString();
+    }
+
+    /** Adresse de la page courante, sans paramètres (lien à partager). */
+    @ModelAttribute("urlPage")
+    public String urlPage() {
+        return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                .fromCurrentRequestUri().replaceQuery(null).toUriString();
+    }
+
     /** La personne connectée (null pour un visiteur). */
     @ModelAttribute("moi")
     public Utilisateur moi() {

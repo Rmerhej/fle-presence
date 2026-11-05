@@ -63,6 +63,33 @@ public class PublicController {
         return "confidentialite";
     }
 
+    /** Moteurs de recherche : pages publiques seulement, jamais les espaces bénévoles. */
+    @GetMapping(value = "/robots.txt", produces = "text/plain;charset=UTF-8")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public String robots() {
+        String site = ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
+        return "User-agent: *\n"
+                + "Allow: /\n"
+                + "Disallow: /admin\nDisallow: /responsable\nDisallow: /saisie\nDisallow: /login\n"
+                + "Disallow: /push\nDisallow: /actuator\nDisallow: /*/calendrier.ics\n"
+                + "Sitemap: " + site + "/sitemap.xml\n";
+    }
+
+    /** Plan du site pour les moteurs de recherche : accueil, pages des villes, pages d'information. */
+    @GetMapping(value = "/sitemap.xml", produces = "application/xml;charset=UTF-8")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public String sitemap() {
+        String site = ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
+        StringBuilder x = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+        java.util.List<String> chemins = new java.util.ArrayList<>(List.of("/", "/plan-du-site", "/confidentialite"));
+        administrationService.unitesActives().forEach(u -> chemins.add("/u/" + u.getSlug()));
+        for (String c : chemins) {
+            x.append("  <url><loc>").append(site).append(c).append("</loc></url>\n");
+        }
+        return x.append("</urlset>\n").toString();
+    }
+
     @GetMapping("/u/{slug}")
     public String planning(@PathVariable String slug,
                            @RequestParam(required = false) Long groupe,
@@ -102,6 +129,9 @@ public class PublicController {
                 .queryParamIfPresent("groupe", java.util.Optional.ofNullable(groupe))
                 .buildAndExpand(unite.getSlug()).toUriString();
         String webcal = ics.replaceFirst("^https?://", "webcal://");
+        model.addAttribute("titrePartage", "Cours de français à " + unite.getNom());
+        model.addAttribute("descriptionPage", "Cours de français gratuits à " + unite.getNom()
+                + " : les prochaines dates, les annulations et les reports. Sans inscription.");
         model.addAttribute("lienIcs", ics);
         model.addAttribute("manifestUrl", "/u/" + unite.getSlug() + "/manifest.json");
         model.addAttribute("lienWebcal", webcal);

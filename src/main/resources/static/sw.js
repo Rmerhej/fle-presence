@@ -3,7 +3,7 @@
    - affiche les notifications d'annulation / de report */
 
 // Changer ce numéro force les téléphones à vider l'ancien cache.
-const VERSION = 'fle-v3';
+const VERSION = 'fle-v4';
 const A_PRECHARGER = ['/hors-ligne.html', '/css/app.css', '/js/app.js', '/icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
@@ -60,8 +60,8 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Icônes (elles ne changent pas) : le cache d'abord.
-    if (url.pathname.startsWith('/icons/')) {
+    // Icônes, bibliothèques et polices (elles ne changent pas) : le cache d'abord.
+    if (url.pathname.startsWith('/icons/') || url.pathname.startsWith('/vendor/')) {
         e.respondWith(
             caches.match(req).then((r) => r || fetch(req).then((rep) => {
                 const copie = rep.clone();

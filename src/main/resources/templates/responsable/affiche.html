@@ -37,7 +37,7 @@
 </main>
 
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script th:src="@{/vendor/qrcodejs/qrcode.min.js}"></script>
 <script th:src="@{/js/pages.js}"></script>
 </body>
 </html>

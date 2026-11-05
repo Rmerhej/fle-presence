@@ -1,0 +1,16 @@
+/* Polices hébergées sur notre serveur (aucune connexion à Google Fonts).
+   Inter (texte) : police variable, graisses 100 à 900. Nunito (titres) : graisses 700 à 900, caractères latins. */
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("InterVariable.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Nunito";
+    font-style: normal;
+    font-weight: 200 1000;
+    font-display: swap;
+    src: url("Nunito-latin.woff") format("woff");
+}

@@ -55,7 +55,7 @@ public class FiltreLimitation extends OncePerRequestFilter {
         }
         // Fichiers statiques : mis en cache par le navigateur, inutile de les compter.
         String uri = request.getRequestURI();
-        return uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/icons/")
+        return uri.startsWith("/css/") || uri.startsWith("/js/") || uri.startsWith("/icons/") || uri.startsWith("/vendor/")
                 || uri.equals("/favicon.ico") || uri.equals("/sw.js") || uri.equals("/hors-ligne.html");
     }
 

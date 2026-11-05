@@ -7,6 +7,31 @@ document.addEventListener('DOMContentLoaded', () => {
         b.addEventListener('click', () => window.print()));
     document.querySelectorAll('select[data-envoi-auto]').forEach((s) =>
         s.addEventListener('change', () => s.form.submit()));
+    // Bouton « Partager » (page d'une ville) : menu de partage du téléphone (WhatsApp, SMS…),
+    // ou, sur ordinateur, copie du lien dans le presse-papiers.
+    const boutonPartager = document.getElementById('bouton-partager');
+    if (boutonPartager) {
+        const libelle = boutonPartager.querySelector('span');
+        const texteInitial = libelle.textContent;
+        boutonPartager.addEventListener('click', async () => {
+            const titre = boutonPartager.dataset.titre;
+            const lien = boutonPartager.dataset.lien;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: titre, text: titre + ' : les dates des cours', url: lien });
+                } catch (e) { /* partage annulé */ }
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(lien);
+                libelle.textContent = 'Lien copié !';
+            } catch (e) {
+                libelle.textContent = lien;
+            }
+            setTimeout(() => { libelle.textContent = texteInitial; }, 2500);
+        });
+    }
+
     document.querySelectorAll('[data-haut-de-page]').forEach((a) =>
         a.addEventListener('click', (e) => {
             e.preventDefault();

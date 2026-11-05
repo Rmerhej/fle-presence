@@ -81,6 +81,10 @@
                     </ul>
                 </div>
                 <div th:replace="~{fragments/layout :: installer}"></div>
+                <button type="button" class="btn btn-outline-primary" id="bouton-partager"
+                        th:attr="data-titre='Cours de français à ' + ${unite.nom},data-lien=${urlPage}">
+                    <i class="bi bi-share me-1"></i><span>Partager</span>
+                </button>
                 <button type="button" class="btn btn-outline-primary d-none" id="bouton-notifications"
                         th:attr="data-unite=${unite.slug},data-groupe=${groupeChoisi}">
                     <i class="bi bi-bell me-1"></i><span>Me prévenir</span>

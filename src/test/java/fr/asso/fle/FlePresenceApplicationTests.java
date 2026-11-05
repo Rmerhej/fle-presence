@@ -80,6 +80,17 @@ class FlePresenceApplicationTests {
     }
 
     @Test
+    void partageEtReferencement() throws Exception {
+        mvc.perform(get("/u/chatou")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("og:image")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("bouton-partager")));
+        mvc.perform(get("/robots.txt")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Disallow: /admin")));
+        mvc.perform(get("/sitemap.xml")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/u/chatou")));
+    }
+
+    @Test
     void uniteInconnueDonne404() throws Exception {
         mvc.perform(get("/u/nulle-part")).andExpect(status().isNotFound());
     }
