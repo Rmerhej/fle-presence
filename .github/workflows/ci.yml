@@ -2,6 +2,8 @@
 #  - à chaque push / pull request : compilation + tests
 #  - sur la branche main : construction et publication de l'image Docker sur Docker Hub
 #    (secrets à créer dans GitHub : DOCKERHUB_USERNAME et DOCKERHUB_TOKEN)
+#  - puis mise en ligne automatique sur le serveur, par SSH
+#    (secrets : SERVEUR_HOTE, SERVEUR_UTILISATEUR, SERVEUR_CLE_SSH ; sans eux, cette étape est sautée)
 name: CI
 
 on:
@@ -19,9 +21,9 @@ jobs:
     name: Compilation et tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -32,7 +34,7 @@ jobs:
 
       - name: Rapports de tests (en cas d'échec)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rapports-tests
           path: target/surefire-reports/
@@ -43,7 +45,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Vérifier la présence des secrets Docker Hub
         id: secrets
@@ -82,3 +84,55 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploiement:
+    name: Mise en ligne
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Une seule mise en ligne à la fois, dans l'ordre des push
+    concurrency:
+      group: deploiement
+      cancel-in-progress: false
+    steps:
+      - name: Vérifier la présence des secrets du serveur
+        id: secrets
+        run: |
+          if [ -n "${{ secrets.SERVEUR_CLE_SSH }}" ] && [ -n "${{ secrets.SERVEUR_HOTE }}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Secrets du serveur absents : mise en ligne automatique sautée."
+          fi
+
+      - name: Mettre à jour le serveur
+        if: steps.secrets.outputs.ok == 'true'
+        env:
+          CLE: ${{ secrets.SERVEUR_CLE_SSH }}
+          HOTE: ${{ secrets.SERVEUR_HOTE }}
+          UTILISATEUR: ${{ secrets.SERVEUR_UTILISATEUR }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/deploiement
+          chmod 600 ~/.ssh/deploiement
+          ssh-keyscan -H "$HOTE" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploiement "${UTILISATEUR:-ubuntu}@$HOTE" 'bash -s' <<'FIN'
+            set -e
+            cd ~/fle-presence
+            git pull --ff-only
+            docker compose pull app
+            docker compose up -d --remove-orphans
+            docker image prune -f > /dev/null
+            # Attendre que l'application réponde (au plus 3 minutes)
+            DOMAINE=$(grep '^DOMAINE=' .env | cut -d= -f2-)
+            for i in $(seq 1 36); do
+              if curl -fsS "https://$DOMAINE/actuator/health" | grep -q UP; then
+                echo "Application en ligne et en bonne santé."
+                exit 0
+              fi
+              sleep 5
+            done
+            echo "L'application ne répond pas après la mise à jour."
+            docker compose logs --tail 80 app
+            exit 1
+          FIN

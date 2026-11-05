@@ -103,7 +103,21 @@ docker compose ps
 
 ## 6. Mettre à jour après une modification
 
-Sur votre PC : `git push` (GitHub Actions publie la nouvelle image). Puis sur le serveur :
+**Automatique** : après chaque `git push` sur `main`, GitHub Actions lance les tests, publie la nouvelle
+image, puis se connecte au serveur et la met en ligne (étape « Mise en ligne »). Il vérifie ensuite que
+`/actuator/health` répond `UP` ; sinon l'étape échoue en rouge et affiche les journaux de l'application.
+
+Mise en place (une seule fois) :
+
+1. Sur le PC (Git Bash), créer une clé réservée au déploiement, sans mot de passe :
+   `ssh-keygen -t ed25519 -f ~/.ssh/fle_deploiement -N "" -C "github-actions-deploiement"`
+2. L'autoriser sur le serveur :
+   `cat ~/.ssh/fle_deploiement.pub | ssh -i ~/.ssh/oracle_rsa_4096 ubuntu@ADRESSE_IP 'cat >> ~/.ssh/authorized_keys'`
+3. GitHub → dépôt → Settings → Secrets and variables → Actions → New repository secret :
+   `SERVEUR_HOTE` (adresse IP), `SERVEUR_UTILISATEUR` (`ubuntu`) et `SERVEUR_CLE_SSH`
+   (tout le contenu de `~/.ssh/fle_deploiement`, lignes BEGIN et END comprises).
+
+**À la main**, si besoin, sur le serveur :
 
 ```bash
 cd fle-presence
