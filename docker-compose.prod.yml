@@ -31,7 +31,9 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./deploiement/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Le dossier entier (et non le seul fichier) : après un « git pull », Caddy voit bien
+      # la nouvelle version du Caddyfile (un fichier monté seul garderait l'ancienne).
+      - ./deploiement:/etc/caddy:ro
       - caddy-data:/data
       - caddy-config:/config
 
