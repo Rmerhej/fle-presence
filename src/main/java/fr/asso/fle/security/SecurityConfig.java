@@ -33,7 +33,8 @@ public class SecurityConfig {
                 // Pages publiques : accueil, planning des unités (apprenants), ressources statiques
                 .requestMatchers("/", "/u/**", "/plan-du-site", "/confidentialite", "/login", "/error",
                         "/css/**", "/js/**", "/img/**", "/icons/**", "/favicon.ico",
-                        "/manifest.json", "/sw.js", "/hors-ligne.html", "/push/**").permitAll()
+                        "/manifest.json", "/sw.js", "/hors-ligne.html", "/push/**",
+                        "/actuator/health").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/responsable/**").hasRole("RESPONSABLE")
                 .requestMatchers("/saisie/**").hasAnyRole("BENEVOLE", "RESPONSABLE")

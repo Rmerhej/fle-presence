@@ -72,6 +72,14 @@ class FlePresenceApplicationTests {
     }
 
     @Test
+    void pageDeSantePublique() throws Exception {
+        mvc.perform(get("/actuator/health")).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("UP")));
+        // Les autres points techniques ne sont pas publiés.
+        mvc.perform(get("/actuator/env")).andExpect(status().is3xxRedirection());
+    }
+
+    @Test
     void uniteInconnueDonne404() throws Exception {
         mvc.perform(get("/u/nulle-part")).andExpect(status().isNotFound());
     }
