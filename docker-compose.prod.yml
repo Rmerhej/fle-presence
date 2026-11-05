@@ -14,6 +14,11 @@ services:
     pull_policy: always
     ports: !reset []
 
+  # phpMyAdmin ne démarre pas sur le serveur (inutile en production).
+  # Pour l'utiliser exceptionnellement : docker compose --profile outils up -d phpmyadmin
+  phpmyadmin:
+    profiles: ["outils"]
+
   caddy:
     image: caddy:2
     restart: unless-stopped

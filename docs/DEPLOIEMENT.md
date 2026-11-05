@@ -170,14 +170,31 @@ vraie sauvegarde.
 
 ## 8. phpMyAdmin sur le serveur
 
-Il n'écoute que sur le serveur lui-même (127.0.0.1), donc il n'est **pas** visible sur Internet.
-Pour l'utiliser depuis votre PC, ouvrez un tunnel SSH :
+Il ne démarre **pas** sur le serveur (profil `outils` dans `docker-compose.prod.yml`) : inutile en production,
+et un outil de moins à protéger. Pour l'utiliser exceptionnellement :
 
-```powershell
-ssh -L 8081:127.0.0.1:8081 root@ADRESSE_IP_DU_SERVEUR
+```bash
+docker compose --profile outils up -d phpmyadmin
 ```
 
-puis ouvrez http://localhost:8081 sur votre PC (tant que la fenêtre SSH reste ouverte).
+Il n'écoute que sur le serveur lui-même (127.0.0.1). Depuis votre PC, ouvrez un tunnel SSH :
+
+```bash
+ssh -i ~/.ssh/oracle_rsa_4096 -L 8081:127.0.0.1:8081 ubuntu@ADRESSE_IP
+```
+
+puis http://localhost:8081 (tant que la fenêtre SSH reste ouverte). Ensuite, l'arrêter :
+`docker compose --profile outils stop phpmyadmin`.
+
+## 9. Sécurité du serveur
+
+- **Mises à jour de sécurité automatiques** d'Ubuntu (`unattended-upgrades`), avec redémarrage à 4 h si
+  nécessaire ; les conteneurs repartent seuls (`restart: unless-stopped`).
+- **En-têtes de sécurité** ajoutés par Caddy (`deploiement/Caddyfile`) : HSTS, interdiction d'affichage dans
+  un cadre, politique de contenu (CSP)… Après une modification de l'application qui charge un nouveau
+  fichier externe (CDN), l'ajouter à la CSP, sinon le navigateur le bloque (message dans la console F12).
+- **Images MySQL et Caddy** mises à jour à chaque mise en ligne automatique (`docker compose pull`).
+- Connexion SSH **par clé uniquement** (réglage par défaut des images Oracle).
 
 ## En cas de problème
 

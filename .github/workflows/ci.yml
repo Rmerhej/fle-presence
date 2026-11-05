@@ -120,8 +120,11 @@ jobs:
             set -e
             cd ~/fle-presence
             git pull --ff-only
-            docker compose pull app
+            # Toutes les images : l'application, et aussi les correctifs de MySQL 8.0 et de Caddy
+            docker compose pull
             docker compose up -d --remove-orphans
+            # Caddy relit sa configuration (en-têtes de sécurité…) sans couper le site
+            docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
             docker image prune -f > /dev/null
             # Attendre que l'application réponde (au plus 3 minutes)
             DOMAINE=$(grep '^DOMAINE=' .env | cut -d= -f2-)
