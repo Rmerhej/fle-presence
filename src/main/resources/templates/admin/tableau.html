@@ -16,10 +16,10 @@
             <form th:action="@{/admin}" method="get" class="d-flex flex-wrap gap-2">
                 <input type="hidden" name="du" th:value="${du}">
                 <input type="hidden" name="au" th:value="${au}">
-                <select name="annee" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()" aria-label="Année">
+                <select name="annee" class="form-select form-select-sm" style="width:auto" data-envoi-auto aria-label="Année">
                     <option th:each="a : ${annees}" th:value="${a}" th:text="${a}" th:selected="${a == annee}"></option>
                 </select>
-                <select name="uniteId" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()" aria-label="Unité">
+                <select name="uniteId" class="form-select form-select-sm" style="width:auto" data-envoi-auto aria-label="Unité">
                     <option value="">Toutes les unités</option>
                     <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}" th:selected="${u.id == uniteId}"></option>
                 </select>
@@ -228,54 +228,7 @@
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script th:inline="javascript">
-    (function () {
-        const donnees = /*[[${graphique}]]*/ {mois: [], series: []};
-        const couleurs = ['#3459e6', '#2fb380', '#f4a100', '#da292e', '#7a4ff0', '#14a2b8', '#e85d9c', '#5c677d'];
-
-        const jeux = (indicateur) => donnees.series.map((s, i) => ({
-            label: s.unite,
-            data: s[indicateur],
-            backgroundColor: couleurs[i % couleurs.length],
-            borderRadius: 6,
-            maxBarThickness: 36
-        }));
-
-        // Couleurs des axes et légendes adaptées au mode clair / sombre.
-        const appliquerTheme = () => {
-            const sombre = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-            Chart.defaults.color = sombre ? '#9aa3bb' : '#6b7590';
-            Chart.defaults.borderColor = sombre ? 'rgba(255,255,255,.08)' : 'rgba(31,42,68,.08)';
-        };
-        appliquerTheme();
-        document.addEventListener('fle-theme', () => {
-            appliquerTheme();
-            graphique.options.scales.x.ticks.color = Chart.defaults.color;
-            graphique.options.scales.y.ticks.color = Chart.defaults.color;
-            graphique.options.scales.y.grid.color = Chart.defaults.borderColor;
-            graphique.options.plugins.legend.labels.color = Chart.defaults.color;
-            graphique.update();
-        });
-
-        const graphique = new Chart(document.getElementById('graphique-mensuel'), {
-            type: 'bar',
-            data: { labels: donnees.mois, datasets: jeux('apprenants') },
-            options: {
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
-                scales: {
-                    x: { stacked: true, grid: { display: false } },
-                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
-                }
-            }
-        });
-
-        document.querySelectorAll('input[name="indicateur"]').forEach(r =>
-            r.addEventListener('change', () => {
-                graphique.data.datasets = jeux(r.value);
-                graphique.update();
-            }));
-    })();
-</script>
+<script type="application/json" id="donnees-graphique" th:inline="javascript">/*[[${graphique}]]*/ null</script>
+<script th:src="@{/js/pages.js}"></script>
 </body>
 </html>

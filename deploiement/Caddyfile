@@ -15,8 +15,9 @@
         Cross-Origin-Opener-Policy "same-origin"
         # Aucun accès à la caméra, au micro, à la position…
         Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
-        # Le navigateur ne charge que nos fichiers et ceux des CDN utilisés (Bootstrap, polices, graphiques, QR code)
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        # Le navigateur ne charge que nos fichiers et ceux des CDN utilisés (Bootstrap, polices, graphiques, QR code).
+        # Aucun script écrit dans le HTML n'est exécuté (pas de 'unsafe-inline' pour les scripts).
+        Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         -Server
     }
 }

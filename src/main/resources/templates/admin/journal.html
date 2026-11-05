@@ -13,7 +13,7 @@
                 <h1 class="h2 mb-0">Historique des modifications</h1>
             </div>
             <form th:action="@{/admin/journal}" method="get">
-                <select name="uniteId" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Unité">
+                <select name="uniteId" class="form-select form-select-sm" data-envoi-auto aria-label="Unité">
                     <option value="">Toutes les unités</option>
                     <option th:each="u : ${unites}" th:value="${u.id}" th:text="${u.nom}" th:selected="${u.id == uniteId}"></option>
                 </select>

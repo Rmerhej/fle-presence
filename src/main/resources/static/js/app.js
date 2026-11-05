@@ -1,6 +1,18 @@
 /* FLE Présence — petits comportements communs */
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Petites actions des pages, sans JavaScript écrit dans le HTML
+    // (la politique de sécurité CSP du site interdit les scripts « en ligne »).
+    document.querySelectorAll('[data-imprimer]').forEach((b) =>
+        b.addEventListener('click', () => window.print()));
+    document.querySelectorAll('select[data-envoi-auto]').forEach((s) =>
+        s.addEventListener('change', () => s.form.submit()));
+    document.querySelectorAll('[data-haut-de-page]').forEach((a) =>
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }));
+
     // Bascule mode clair / sombre (choix mémorisé dans le navigateur).
     const boutonTheme = document.getElementById('bouton-theme');
     if (boutonTheme) {

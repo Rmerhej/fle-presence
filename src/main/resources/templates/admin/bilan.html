@@ -15,7 +15,7 @@
             <input type="number" min="0" step="0.01" class="form-control" id="taux" placeholder="€ / heure" style="width:7rem"
                    aria-label="Taux horaire de valorisation du bénévolat en euros">
         </div>
-        <button class="btn btn-primary btn-sm" onclick="window.print()">
+        <button class="btn btn-primary btn-sm" data-imprimer>
             <i class="bi bi-printer me-1"></i>Imprimer / enregistrer en PDF</button>
     </div>
 
@@ -159,39 +159,7 @@
 
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script th:inline="javascript">
-    (function () {
-        const donnees = /*[[${graphique}]]*/ {mois: [], series: []};
-        const couleurs = ['#3459e6', '#2fb380', '#f4a100', '#da292e', '#7a4ff0', '#14a2b8', '#e85d9c', '#5c677d'];
-        Chart.defaults.color = '#6b7590';
-        new Chart(document.getElementById('graphique-bilan'), {
-            type: 'bar',
-            data: {
-                labels: donnees.mois,
-                datasets: donnees.series.map((s, i) => ({
-                    label: s.unite, data: s.apprenants, backgroundColor: couleurs[i % couleurs.length],
-                    borderRadius: 4, maxBarThickness: 32
-                }))
-            },
-            options: {
-                maintainAspectRatio: false, animation: false,
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
-                scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
-            }
-        });
-
-        // Valorisation du bénévolat (calcul dans le navigateur, rien n'est enregistré)
-        const taux = document.getElementById('taux');
-        const sortie = document.getElementById('valorisation');
-        const heures = parseFloat(document.getElementById('heures-benevolat').dataset.heures || '0');
-        taux.addEventListener('input', () => {
-            const t = parseFloat(taux.value);
-            if (!t || t <= 0) { sortie.classList.add('d-none'); return; }
-            const montant = (heures * t).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-            sortie.textContent = 'Valorisation : ' + montant + ' (' + t.toLocaleString('fr-FR') + ' €/h)';
-            sortie.classList.remove('d-none');
-        });
-    })();
-</script>
+<script type="application/json" id="donnees-graphique" th:inline="javascript">/*[[${graphique}]]*/ null</script>
+<script th:src="@{/js/pages.js}"></script>
 </body>
 </html>
