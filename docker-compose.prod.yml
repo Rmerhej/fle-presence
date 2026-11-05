@@ -5,6 +5,9 @@
 # - l'image est téléchargée depuis Docker Hub (pas de compilation sur le serveur)
 services:
 
+  db:
+    ports: !reset []
+
   app:
     build: !reset null
     image: ${APP_IMAGE:-rolandmerhej1/fle-presence:latest}
@@ -27,6 +30,40 @@ services:
       - caddy-data:/data
       - caddy-config:/config
 
+  # Copie de chaque sauvegarde HORS du serveur (Oracle Object Storage), puis signal à Healthchecks.io.
+  # Sans SAUVEGARDE_PAR_URL dans .env, le service ne fait rien.
+  envoi-sauvegardes:
+    image: curlimages/curl:8.11.1
+    restart: unless-stopped
+    user: root
+    environment:
+      PAR_URL: ${SAUVEGARDE_PAR_URL:-}
+      HEALTHCHECKS_URL: ${HEALTHCHECKS_URL:-}
+    volumes:
+      - ./sauvegardes:/sauvegardes:ro
+      - envois:/etat
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -z "$$PAR_URL" ]; then echo "SAUVEGARDE_PAR_URL vide : aucune copie hors du serveur."; while true; do sleep 3600; done; fi
+        while true; do
+          for f in /sauvegardes/*.sql.gz; do
+            [ -f "$$f" ] || continue
+            nom=$$(basename "$$f")
+            [ -f "/etat/$$nom" ] && continue
+            if curl -fsS --retry 3 -T "$$f" "$${PAR_URL%/}/$$nom" >/dev/null; then
+              touch "/etat/$$nom"
+              echo "Copie hors serveur OK : $$nom"
+              [ -n "$$HEALTHCHECKS_URL" ] && curl -fsS --retry 3 "$$HEALTHCHECKS_URL" >/dev/null
+            else
+              echo "ÉCHEC de la copie : $$nom"
+              [ -n "$$HEALTHCHECKS_URL" ] && curl -fsS --retry 3 "$$HEALTHCHECKS_URL/fail" >/dev/null
+            fi
+          done
+          sleep 600
+        done
+
 volumes:
   caddy-data:
   caddy-config:
+  envois:

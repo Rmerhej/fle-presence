@@ -1,6 +1,8 @@
-# FLE Présence : application + MySQL 8 + phpMyAdmin
+# FLE Présence : application + MySQL 8 + phpMyAdmin + sauvegardes
 #   1. cp .env.example .env   (puis choisir les mots de passe)
-#   2. docker compose up -d --build
+#   2a. Tout dans Docker :        docker compose up -d --build
+#   2b. Développer dans IntelliJ : docker compose up -d db phpmyadmin sauvegarde
+#       (l'application lancée par IntelliJ utilise la base sur 127.0.0.1:3310)
 #   Application : http://localhost:8080      phpMyAdmin : http://localhost:8081
 name: fle-presence
 
@@ -18,9 +20,9 @@ services:
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     volumes:
       - db-data:/var/lib/mysql
+    # Accessible uniquement depuis cet ordinateur (pour IntelliJ) ; fermé sur le serveur (prod).
     ports:
       - "127.0.0.1:${DB_PORT:-3310}:3306"
-    # La base n'est pas exposée sur la machine : seuls l'app et phpMyAdmin y accèdent.
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
@@ -72,11 +74,16 @@ services:
       - |
         sauvegarder() {
           fichier="/sauvegardes/fle_presence_$$(date +%Y-%m-%d_%H%M).sql.gz"
-          if mysqldump -h db -uroot --single-transaction --routines --no-tablespaces fle_presence | gzip > "$$fichier"; then
+          # Fichier temporaire, puis renommage : un fichier .sql.gz n'existe que si la sauvegarde
+          # est complète (l'envoi hors du serveur ne voit jamais de fichier à moitié écrit).
+          if mysqldump -h db -uroot --single-transaction --routines --no-tablespaces fle_presence > /tmp/dump.sql \
+             && grep -q "Dump completed" /tmp/dump.sql \
+             && gzip -c /tmp/dump.sql > "$$fichier.tmp" && mv "$$fichier.tmp" "$$fichier"; then
             echo "Sauvegarde OK : $$fichier"
           else
-            echo "ÉCHEC de la sauvegarde" ; rm -f "$$fichier"
+            echo "ÉCHEC de la sauvegarde" ; rm -f "$$fichier.tmp"
           fi
+          rm -f /tmp/dump.sql
           ls -1t /sauvegardes/*.sql.gz 2>/dev/null | tail -n +$$((CONSERVER + 1)) | while read -r ancien; do rm -f "$$ancien"; done
         }
         sauvegarder

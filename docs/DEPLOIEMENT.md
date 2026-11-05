@@ -116,14 +116,43 @@ docker compose up -d
 
 - Le service `sauvegarde` exporte la base chaque nuit (vers 2 h) dans `fle-presence/sauvegardes/`,
   et garde les 14 dernières.
-- **Copiez-les aussi ailleurs** (une sauvegarde sur le même serveur ne protège pas d'une panne du serveur) :
-  depuis votre PC, `scp root@ADRESSE_IP:fle-presence/sauvegardes/*.sql.gz .`
+- **Copie hors du serveur** (une sauvegarde sur le même serveur ne protège pas d'une panne du serveur) :
+  le service `envoi-sauvegardes` envoie chaque nouvelle sauvegarde dans un bucket Oracle Object Storage
+  (gratuit jusqu'à 20 Go), puis prévient Healthchecks.io. Réglages dans `.env` : `SAUVEGARDE_PAR_URL`
+  et `HEALTHCHECKS_URL` (voir ci-dessous). Suivi : `docker compose logs envoi-sauvegardes`.
+- Copie manuelle sur votre PC, si besoin : `scp ubuntu@ADRESSE_IP:fle-presence/sauvegardes/*.sql.gz .`
 - Restaurer une sauvegarde :
 
   ```bash
   gunzip -c sauvegardes/fle_presence_2026-11-02_0200.sql.gz | \
     docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" fle_presence'
   ```
+
+### Mettre en place la copie hors du serveur (Oracle Object Storage)
+
+1. Console Oracle → **Storage → Buckets → Create Bucket** : nom `fle-sauvegardes`, niveau *Standard*,
+   chiffrement par Oracle (par défaut).
+2. Dans le bucket → **Pre-Authenticated Requests → Create** : cible *Bucket*, accès
+   **Permit object writes** (écriture seule : l'URL ne permet pas de lire les sauvegardes),
+   date d'expiration lointaine (ex. dans 3 ans, à noter dans l'agenda). Copier l'URL affichée
+   **une seule fois** dans `SAUVEGARDE_PAR_URL`.
+3. Suppression automatique après 30 jours : dans le bucket → **Lifecycle Policy Rules → Create Rule** :
+   *Delete*, 30 jours. Si Oracle demande une autorisation, ajouter dans **Identity → Policies**
+   (compartiment racine) : `Allow service objectstorage-eu-paris-1 to manage object-family in tenancy`.
+
+### Surveiller les sauvegardes (Healthchecks.io)
+
+1. Créer un compte gratuit sur healthchecks.io, puis un *check* : période **1 jour**, délai de grâce **2 heures**.
+2. Copier son URL de ping (`https://hc-ping.com/…`) dans `HEALTHCHECKS_URL`.
+3. Sans copie réussie pendant plus de 26 heures, Healthchecks envoie un e-mail.
+
+Après avoir modifié `.env` : `docker compose up -d`.
+
+### Tester une restauration (tous les 3 mois)
+
+Télécharger une sauvegarde depuis le bucket (console Oracle → bucket → objet → *Download*) et la restaurer
+sur le PC, dans la base de test, avec la commande ci-dessus. Une sauvegarde jamais restaurée n'est pas une
+vraie sauvegarde.
 
 ## 8. phpMyAdmin sur le serveur
 
