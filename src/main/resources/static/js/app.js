@@ -32,11 +32,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.querySelectorAll('[data-haut-de-page]').forEach((a) =>
-        a.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }));
+    // ------------------------------------------------ bouton « Retour » (toutes les pages sauf l'accueil)
+    // Revient à la page précédente du site ; si on arrive de l'extérieur (lien, QR code, appli),
+    // remonte à la page « parente » (ex. /admin/journal → /admin, /u/chatou → accueil).
+    const chemin = window.location.pathname.replace(/\/+$/, '') || '/';
+    if (chemin !== '/') {
+        const parent = (() => {
+            if (chemin.startsWith('/u/')) return '/';
+            const morceaux = chemin.split('/').filter(Boolean);
+            morceaux.pop();
+            return morceaux.length ? '/' + morceaux.join('/') : '/';
+        })();
+        const retour = document.createElement('a');
+        retour.href = parent;
+        retour.className = 'lien-retour d-print-none';
+        retour.innerHTML = '<i class="bi bi-arrow-left" aria-hidden="true"></i><span>Retour</span>';
+        retour.addEventListener('click', (e) => {
+            let memeSite = false;
+            try { memeSite = document.referrer && new URL(document.referrer).origin === window.location.origin; } catch (err) { }
+            if (memeSite && window.history.length > 1) {
+                e.preventDefault();
+                window.history.back();
+            }
+        });
+        // Placé au-dessus du titre de la page (bandeau bleu), sinon en haut du contenu.
+        const cible = document.querySelector('.entete .container') || document.querySelector('main');
+        if (cible) {
+            const zone = document.createElement('div');
+            zone.className = 'container zone-retour d-print-none';
+            zone.appendChild(retour);
+            cible.parentNode.insertBefore(zone, cible);
+        }
+    }
+
+    // ------------------------------------------------ bouton flottant « haut de page »
+    const boutonHaut = document.createElement('button');
+    boutonHaut.type = 'button';
+    boutonHaut.className = 'bouton-haut d-print-none';
+    boutonHaut.setAttribute('aria-label', 'Revenir en haut de la page');
+    boutonHaut.title = 'Haut de page';
+    boutonHaut.innerHTML = '<i class="bi bi-arrow-up" aria-hidden="true"></i>';
+    boutonHaut.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.body.appendChild(boutonHaut);
+    const majHaut = () => boutonHaut.classList.toggle('visible', window.scrollY > 400);
+    window.addEventListener('scroll', majHaut, { passive: true });
+    majHaut();
+
+    // ------------------------------------------------ « œil » des champs mot de passe
+    document.querySelectorAll('input[type="password"]').forEach((champ) => {
+        if (champ.closest('.input-group')) return;
+        const groupe = document.createElement('div');
+        groupe.className = 'input-group' + (champ.classList.contains('form-control-lg') ? ' input-group-lg' : '');
+        champ.parentNode.insertBefore(groupe, champ);
+        groupe.appendChild(champ);
+        const oeil = document.createElement('button');
+        oeil.type = 'button';
+        oeil.className = 'btn bouton-oeil';
+        oeil.setAttribute('aria-label', 'Afficher le mot de passe');
+        oeil.setAttribute('aria-pressed', 'false');
+        oeil.title = 'Afficher le mot de passe';
+        oeil.innerHTML = '<i class="bi bi-eye" aria-hidden="true"></i>';
+        oeil.addEventListener('click', () => {
+            const visible = champ.type === 'password';
+            champ.type = visible ? 'text' : 'password';
+            oeil.innerHTML = visible ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>' : '<i class="bi bi-eye" aria-hidden="true"></i>';
+            const texte = visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe';
+            oeil.setAttribute('aria-label', texte);
+            oeil.title = texte;
+            oeil.setAttribute('aria-pressed', String(visible));
+            champ.focus();
+        });
+        groupe.appendChild(oeil);
+        // Le mot de passe repasse en masqué à l'envoi du formulaire (pas d'enregistrement en clair par le navigateur).
+        if (champ.form) champ.form.addEventListener('submit', () => { champ.type = 'password'; });
+    });
 
     // Bascule mode clair / sombre (choix mémorisé dans le navigateur).
     const boutonTheme = document.getElementById('bouton-theme');

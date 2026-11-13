@@ -324,3 +324,59 @@ footer.surface {
     .affiche { box-shadow: none; border: 0; padding: 0; }
     .card { box-shadow: none; }
 }
+
+/* ---------------------------------------------------------------- bouton « Retour » */
+.zone-retour { margin-top: 1rem; margin-bottom: .5rem; }
+.entete .zone-retour { margin-top: 0; }
+.zone-retour + main.py-5 { padding-top: 1.5rem !important; }
+.lien-retour {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 600;
+    font-size: .95rem;
+    text-decoration: none;
+    padding: .3rem .8rem .3rem .55rem;
+    border-radius: 999px;
+    color: var(--bs-primary);
+    background: rgba(52, 89, 230, .08);
+}
+.lien-retour:hover, .lien-retour:focus-visible { background: rgba(52, 89, 230, .16); color: var(--bs-primary); }
+.entete .lien-retour { color: #fff; background: rgba(255, 255, 255, .14); }
+.entete .lien-retour:hover, .entete .lien-retour:focus-visible { color: #fff; background: rgba(255, 255, 255, .26); }
+
+/* ---------------------------------------------------------------- bouton flottant « haut de page » */
+.bouton-haut {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--bs-primary);
+    color: #fff;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 .5rem 1.25rem rgba(20, 28, 48, .3);
+    opacity: 0;
+    transform: translateY(1rem);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 1030;
+}
+.bouton-haut.visible { opacity: 1; transform: none; pointer-events: auto; }
+.bouton-haut:hover { filter: brightness(1.1); }
+.bouton-haut:focus-visible { outline: 3px solid rgba(52, 89, 230, .45); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .bouton-haut { transition: none; } }
+
+/* ---------------------------------------------------------------- « œil » des mots de passe */
+.bouton-oeil {
+    min-width: 3rem;
+    color: var(--bs-body-color);
+    background: var(--bs-tertiary-bg);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+}
+.bouton-oeil:hover, .bouton-oeil:focus-visible { color: var(--bs-primary); background: var(--bs-secondary-bg); border-color: var(--bs-border-color); }
