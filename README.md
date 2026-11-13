@@ -123,10 +123,7 @@ src/main/resources
 mvn test
 ```
 
-## License and Copyright
+## Pistes pour la suite
 
-Copyright © 2026 Roland Merhej.
-All rights reserved.
-
-Source code is publicly available for review.
-See COPYRIGHT.md for usage restrictions.
+- Déclaration d'accessibilité (RGAA) pour la page publique.
+- Connexion des bénévoles par lien magique ou code, sans mot de passe.
