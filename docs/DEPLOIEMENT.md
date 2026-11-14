@@ -195,6 +195,8 @@ puis http://localhost:8081 (tant que la fenêtre SSH reste ouverte). Ensuite, l'
   fichier externe (CDN), l'ajouter à la CSP, sinon le navigateur le bloque (message dans la console F12).
 - **Images MySQL et Caddy** mises à jour à chaque mise en ligne automatique (`docker compose pull`).
 - Connexion SSH **par clé uniquement** (réglage par défaut des images Oracle).
+- **Journaux limités** (RGPD) : 3 fichiers de 10 Mo au plus par conteneur (`x-journaux` dans les fichiers
+  `docker-compose`), les plus anciennes lignes sont effacées automatiquement. Consulter : `docker compose logs app`.
 
 ## En cas de problème
 

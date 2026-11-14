@@ -6,9 +6,18 @@
 #   Application : http://localhost:8080      phpMyAdmin : http://localhost:8081
 name: fle-presence
 
+# Journaux des conteneurs limités (RGPD : ils peuvent contenir des adresses IP et des identifiants).
+# 3 fichiers de 10 Mo au plus par conteneur : les plus anciennes lignes sont effacées automatiquement.
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
   db:
+    logging: *journaux
     image: mysql:8.0
     restart: unless-stopped
     environment:
@@ -31,6 +40,7 @@ services:
       start_period: 30s
 
   app:
+    logging: *journaux
     build: .
     image: ${APP_IMAGE:-rolandmerhej1/fle-presence:latest}
     restart: unless-stopped
@@ -57,6 +67,7 @@ services:
 
   # Sauvegarde automatique de la base : chaque nuit dans ./sauvegardes, 14 dernières conservées
   sauvegarde:
+    logging: *journaux
     image: mysql:8.0
     restart: unless-stopped
     depends_on:
@@ -95,6 +106,7 @@ services:
         done
 
   phpmyadmin:
+    logging: *journaux
     image: phpmyadmin:5
     restart: unless-stopped
     depends_on:

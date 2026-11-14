@@ -3,6 +3,14 @@
 # - Caddy reçoit le trafic sur les ports 80/443 et gère le HTTPS automatiquement
 # - l'application n'est plus exposée directement
 # - l'image est téléchargée depuis Docker Hub (pas de compilation sur le serveur)
+# Journaux des conteneurs limités (RGPD : ils peuvent contenir des adresses IP et des identifiants).
+# 3 fichiers de 10 Mo au plus par conteneur : les plus anciennes lignes sont effacées automatiquement.
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
   db:
@@ -20,6 +28,7 @@ services:
     profiles: ["outils"]
 
   caddy:
+    logging: *journaux
     image: caddy:2
     restart: unless-stopped
     depends_on:
@@ -40,6 +49,7 @@ services:
   # Copie de chaque sauvegarde HORS du serveur (Oracle Object Storage), puis signal à Healthchecks.io.
   # Sans SAUVEGARDE_PAR_URL dans .env, le service ne fait rien.
   envoi-sauvegardes:
+    logging: *journaux
     image: curlimages/curl:8.11.1
     restart: unless-stopped
     user: root
