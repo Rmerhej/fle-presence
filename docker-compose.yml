@@ -53,11 +53,11 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:-admin}
       APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:?Définir APP_ADMIN_PASSWORD dans .env}
-      APP_LIEN_FRENCH_FOR_BEGINNERS: ${APP_LIEN_FRENCH_FOR_BEGINNERS:-}
+      APP_LIEN_FRENCH_FOR_BEGINNERS: ${APP_LIEN_FRENCH_FOR_BEGINNERS:-https://frenchforbeginners.duckdns.org}
       APP_LIEN_BENEVOLAT: ${APP_LIEN_BENEVOLAT:-}
-      APP_LIEN_FACEBOOK: ${APP_LIEN_FACEBOOK:-}
+      APP_LIEN_FACEBOOK: ${APP_LIEN_FACEBOOK:-https://www.facebook.com/Secours.Catholique.Caritas.france}
       APP_LIEN_INSTAGRAM: ${APP_LIEN_INSTAGRAM:-}
-      APP_LIEN_LINKEDIN: ${APP_LIEN_LINKEDIN:-}
+      APP_LIEN_LINKEDIN: ${APP_LIEN_LINKEDIN:-https://www.linkedin.com/company/secours-catholique-france/}
       APP_LIEN_YOUTUBE: ${APP_LIEN_YOUTUBE:-}
       APP_LIEN_X: ${APP_LIEN_X:-}
       APP_NOTIFICATIONS_SUJET: ${APP_NOTIFICATIONS_SUJET:-https://www.secours-catholique.org}
