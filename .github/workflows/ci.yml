@@ -90,6 +90,10 @@ jobs:
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Approbation manuelle avant la mise en ligne (Settings → Environments → production → Required reviewers)
+    environment:
+      name: production
+      url: https://fle-presence.duckdns.org
     # Une seule mise en ligne à la fois, dans l'ordre des push
     concurrency:
       group: deploiement
