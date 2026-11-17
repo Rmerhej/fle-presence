@@ -129,6 +129,10 @@ footer.surface {
     border-color: rgba(255, 255, 255, .15);
 }
 [data-bs-theme="dark"] .btn-light { background: #232b3d; border-color: #232b3d; color: #e6e9f2; }
+/* Boutons gris à contour (Désactiver, Modifier, clé…) : le thème les écrit en noir, invisibles sur fond sombre */
+[data-bs-theme="dark"] .btn-outline-secondary { color: #e6e9f2; background-color: transparent; border-color: rgba(255, 255, 255, .3); }
+[data-bs-theme="dark"] .btn-outline-secondary:hover,
+[data-bs-theme="dark"] .btn-outline-secondary:active { color: #fff; background-color: #2c3550; border-color: rgba(255, 255, 255, .5); }
 [data-bs-theme="dark"] .dropdown-menu { --bs-dropdown-bg: var(--fle-surface); --bs-dropdown-link-color: var(--fle-encre); }
 [data-bs-theme="dark"] .modal { --bs-modal-bg: var(--fle-surface); }
 [data-bs-theme="dark"] .nav-tabs { --bs-nav-tabs-link-active-bg: var(--fle-surface); --bs-nav-tabs-link-active-color: var(--fle-encre); }

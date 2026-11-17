@@ -183,8 +183,8 @@
     <div class="container">
         <div class="row g-4">
 
-            <!-- Présentation + réseaux sociaux -->
-            <div class="col-12 col-lg-5">
+            <!-- Présentation -->
+            <div class="col-12 col-lg-4">
                 <a class="d-inline-flex align-items-center gap-2 mb-3 text-reset" th:href="@{/}">
                     <img class="logo-icone" th:src="@{/icons/favicon.svg}" alt="" width="32" height="32">
                     <span class="fw-bold fs-5" style="font-family:Nunito,sans-serif">FLE Présence</span>
@@ -196,22 +196,10 @@
                               th:text="${liens.associationNom()}">Secours Catholique</a></th:block>.
                     Gratuit et ouvert à toutes et à tous.
                 </p>
-                <div class="d-flex gap-2" th:if="${liens != null and liens.aDesReseaux()}">
-                    <a class="reseau" th:if="${!#strings.isEmpty(liens.facebook())}" th:href="${liens.facebook()}"
-                       target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                    <a class="reseau" th:if="${!#strings.isEmpty(liens.instagram())}" th:href="${liens.instagram()}"
-                       target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                    <a class="reseau" th:if="${!#strings.isEmpty(liens.linkedin())}" th:href="${liens.linkedin()}"
-                       target="_blank" rel="noopener" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                    <a class="reseau" th:if="${!#strings.isEmpty(liens.youtube())}" th:href="${liens.youtube()}"
-                       target="_blank" rel="noopener" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-                    <a class="reseau" th:if="${!#strings.isEmpty(liens.x())}" th:href="${liens.x()}"
-                       target="_blank" rel="noopener" aria-label="X"><i class="bi bi-twitter-x"></i></a>
-                </div>
             </div>
 
             <!-- Navigation du site -->
-            <div class="col-6 col-lg-3">
+            <div class="col-6 col-lg-2">
                 <div class="pied-titre">Le site</div>
                 <ul class="list-unstyled small d-grid gap-2 mb-0">
                     <li><a th:href="@{/}"><i class="bi bi-house me-2"></i>Dates des cours</a></li>
@@ -222,7 +210,7 @@
             </div>
 
             <!-- Liens utiles -->
-            <div class="col-6 col-lg-4">
+            <div class="col-6 col-lg-3">
                 <div class="pied-titre">Liens utiles</div>
                 <ul class="list-unstyled small d-grid gap-2 mb-0" th:if="${liens != null}">
                     <li th:if="${!#strings.isEmpty(liens.frenchForBeginners())}">
@@ -242,6 +230,24 @@
                         </a>
                     </li>
                 </ul>
+            </div>
+
+            <!-- Réseaux sociaux -->
+            <div class="col-12 col-lg-3" th:if="${liens != null and liens.aDesReseaux()}">
+                <div class="pied-titre">Réseaux sociaux</div>
+                <p class="small text-doux mb-2">L'actualité du <span th:text="${liens.associationNom()}">Secours Catholique</span></p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="reseau" th:if="${!#strings.isEmpty(liens.facebook())}" th:href="${liens.facebook()}"
+                       target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a class="reseau" th:if="${!#strings.isEmpty(liens.instagram())}" th:href="${liens.instagram()}"
+                       target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a class="reseau" th:if="${!#strings.isEmpty(liens.linkedin())}" th:href="${liens.linkedin()}"
+                       target="_blank" rel="noopener" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    <a class="reseau" th:if="${!#strings.isEmpty(liens.youtube())}" th:href="${liens.youtube()}"
+                       target="_blank" rel="noopener" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                    <a class="reseau" th:if="${!#strings.isEmpty(liens.x())}" th:href="${liens.x()}"
+                       target="_blank" rel="noopener" aria-label="X"><i class="bi bi-twitter-x"></i></a>
+                </div>
             </div>
         </div>
 

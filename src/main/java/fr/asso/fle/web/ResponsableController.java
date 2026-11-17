@@ -12,8 +12,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -63,7 +65,12 @@ public class ResponsableController {
         LocalDate aujourdHui = LocalDate.now();
 
         List<Seance> aVenir = seanceService.seancesEntre(unite, aujourdHui, aujourdHui.plusWeeks(6));
-        List<Seance> nonSaisies = seanceRepository.findNonSaisies(unite, aujourdHui.minusDays(60), aujourdHui);
+        // Seulement les séances déjà terminées : celle de ce matin n'est « en retard » qu'après son heure de fin.
+        LocalDateTime maintenant = LocalDateTime.now(ZoneId.of("Europe/Paris"));
+        List<Seance> nonSaisies = seanceRepository.findNonSaisies(unite, aujourdHui.minusDays(60), aujourdHui).stream()
+                .filter(s -> LocalDateTime.of(s.getDate(), s.getHeureFin() != null ? s.getHeureFin() : s.getHeureDebut())
+                        .isBefore(maintenant))
+                .toList();
 
         model.addAttribute("unite", unite);
         model.addAttribute("onglet", onglet);
