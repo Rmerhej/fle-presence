@@ -32,18 +32,23 @@ public class PublicController {
     private final UniteLocaleRepository uniteRepository;
     private final AdministrationService administrationService;
     private final SeanceService seanceService;
+    private final DonneesStructurees donneesStructurees;
 
     public PublicController(UniteLocaleRepository uniteRepository,
                             AdministrationService administrationService,
-                            SeanceService seanceService) {
+                            SeanceService seanceService,
+                            DonneesStructurees donneesStructurees) {
         this.uniteRepository = uniteRepository;
         this.administrationService = administrationService;
         this.seanceService = seanceService;
+        this.donneesStructurees = donneesStructurees;
     }
 
     @GetMapping("/")
     public String accueil(Model model) {
         model.addAttribute("unites", administrationService.unitesActives());
+        model.addAttribute("donneesStructurees", donneesStructurees.accueil(
+                ServletUriComponentsBuilder.fromCurrentContextPath().toUriString()));
         return "index";
     }
 
@@ -135,6 +140,8 @@ public class PublicController {
         model.addAttribute("lienIcs", ics);
         model.addAttribute("manifestUrl", "/u/" + unite.getSlug() + "/manifest.json");
         model.addAttribute("lienWebcal", webcal);
+        model.addAttribute("donneesStructurees", donneesStructurees.unite(
+                ServletUriComponentsBuilder.fromCurrentContextPath().toUriString(), unite));
         model.addAttribute("lienGoogle", "https://calendar.google.com/calendar/render?cid="
                 + java.net.URLEncoder.encode(webcal, java.nio.charset.StandardCharsets.UTF_8));
         return "public/unite";

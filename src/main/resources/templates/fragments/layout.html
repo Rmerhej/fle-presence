@@ -77,6 +77,10 @@
         <meta property="og:image:alt" content="FLE Présence : cours de français">
         <meta name="twitter:card" content="summary_large_image">
     </th:block>
+    <!-- Une seule adresse officielle par page pour les moteurs de recherche (sans ?groupe=…) -->
+    <link rel="canonical" th:href="${urlPage}">
+    <!-- Données structurées schema.org (site, association, cours de la ville) : lues par Google, jamais exécutées -->
+    <script type="application/ld+json" th:if="${donneesStructurees != null}" th:utext="${donneesStructurees}"></script>
     <!-- Application installable (PWA) -->
     <link rel="manifest" th:if="${manifestUrl != null}" th:href="${manifestUrl}">
     <link rel="manifest" th:unless="${manifestUrl != null}" th:href="@{/manifest.json}">
