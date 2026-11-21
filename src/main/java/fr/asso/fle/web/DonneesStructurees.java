@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class DonneesStructurees {
 
     private static final String DESCRIPTION_SITE =
-            "Cours de français gratuits pour adultes, animés par des bénévoles : dates des cours, annulations et reports, sans inscription.";
+            "Application de gestion des présences des cours de français (FLE) animés par des bénévoles : planning, saisie des présences, statistiques, et dates des cours pour les apprenants.";
 
     private final ObjectMapper json;
     private final Liens liens;
@@ -36,6 +36,7 @@ public class DonneesStructurees {
     public String accueil(String site) {
         List<Object> graphe = new ArrayList<>();
         graphe.add(siteWeb(site));
+        graphe.add(application(site));
         Map<String, Object> asso = association(site);
         if (asso != null) {
             graphe.add(asso);
@@ -105,6 +106,33 @@ public class DonneesStructurees {
             s.put("publisher", Map.of("@id", asso.get("@id")));
         }
         return s;
+    }
+
+    /** L'application elle-même : gestion des présences, gratuite, utilisable dans le navigateur ou installée. */
+    private Map<String, Object> application(String site) {
+        Map<String, Object> a = objet("WebApplication");
+        a.put("@id", site + "/#application");
+        a.put("name", "FLE Présence");
+        a.put("url", site + "/");
+        a.put("description", DESCRIPTION_SITE);
+        a.put("applicationCategory", "EducationalApplication");
+        a.put("operatingSystem", "Navigateur web, Android, iOS, Windows, macOS");
+        a.put("inLanguage", "fr-FR");
+        a.put("featureList", List.of(
+                "Planning des séances par ville et par groupe",
+                "Saisie des présences par les bénévoles",
+                "Statistiques, bilan annuel, exports Excel et PDF",
+                "Dates des cours, annulations et alertes pour les apprenants"));
+        a.put("isAccessibleForFree", true);
+        Map<String, Object> offre = objet("Offer");
+        offre.put("price", 0);
+        offre.put("priceCurrency", "EUR");
+        a.put("offers", offre);
+        Map<String, Object> asso = association(site);
+        if (asso != null) {
+            a.put("publisher", Map.of("@id", asso.get("@id")));
+        }
+        return a;
     }
 
     /** L'association (nom, site, réseaux sociaux), ou null si elle n'est pas configurée. */

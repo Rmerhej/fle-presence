@@ -62,7 +62,7 @@
     <meta name="theme-color" content="#3459e6">
     <title th:text="${titre} + ' · FLE Présence'">FLE Présence</title>
     <!-- Description et aperçu quand le lien est partagé (WhatsApp, Facebook, SMS…) -->
-    <th:block th:with="desc=${descriptionPage} ?: 'Cours de français gratuits pour adultes, animés par des bénévoles : dates des cours, annulations et reports, sans inscription.',
+    <th:block th:with="desc=${descriptionPage} ?: 'Application de gestion des présences des cours de français (FLE) animés par des bénévoles : planning, saisie des présences, statistiques, et dates des cours pour les apprenants.',
                        titreP=${titrePartage} ?: (${titre} + ' · FLE Présence')">
         <meta name="description" th:content="${desc}">
         <meta property="og:type" content="website">
@@ -194,11 +194,11 @@
                     <span class="fw-bold fs-5" style="font-family:Nunito,sans-serif">FLE Présence</span>
                 </a>
                 <p class="small text-doux mb-3" style="max-width:26rem">
-                    Cours de français pour adultes, animés par des bénévoles
+                    Application de gestion des présences des cours de français pour adultes, animés par des bénévoles
                     <th:block th:if="${liens != null and !#strings.isEmpty(liens.associationNom())}">
                         du <a th:href="${liens.association()}" target="_blank" rel="noopener"
                               th:text="${liens.associationNom()}">Secours Catholique</a></th:block>.
-                    Gratuit et ouvert à toutes et à tous.
+                    Les cours sont gratuits et ouverts à toutes et à tous.
                 </p>
             </div>
 

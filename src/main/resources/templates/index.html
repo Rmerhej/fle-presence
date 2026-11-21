@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Accueil')}"></head>
+<head th:replace="~{fragments/layout :: head('Gestion des présences des cours de français')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 <div th:replace="~{fragments/layout :: toasts}"></div>
@@ -9,6 +9,7 @@
     <section class="entete">
         <div class="container d-flex flex-wrap align-items-end justify-content-between gap-3">
             <div>
+                <p class="text-primary fw-semibold mb-1"><i class="bi bi-clipboard-check me-1"></i>Application de gestion des présences</p>
                 <h1 class="display-6 mb-2">Cours de français</h1>
                 <p class="lead text-doux mb-0">Choisissez votre ville pour voir les dates des cours.</p>
             </div>
